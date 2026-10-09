@@ -17,18 +17,23 @@
       { responsive: true, displaylogo: false });
   }
 
-  function render(url, id, draw) {
+  // ids accepts a single div id or a list of div ids; on fetch error EVERY
+  // listed div gets the failure message (backward-compatible: string still works).
+  function render(url, ids, draw) {
+    var list = Array.isArray(ids) ? ids : [ids];
     fetch(url).then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     }).then(draw).catch(function () {
-      fail(id, "Não foi possível carregar os dados do gráfico.");
+      list.forEach(function (id) {
+        fail(id, "Não foi possível carregar os dados do gráfico.");
+      });
     });
   }
 
   function initOlist() {
     if (!document.getElementById("chart-olist-cat")) return;
-    render("assets/data/olist_charts.json", "chart-olist-atraso", function (d) {
+    render("assets/data/olist_charts.json", ["chart-olist-cat", "chart-olist-uf", "chart-olist-atraso"], function (d) {
       bar("chart-olist-cat",
         d.receita_por_categoria.map(function (r) { return r.categoria; }),
         d.receita_por_categoria.map(function (r) { return r.receita; }),
@@ -50,7 +55,7 @@
 
   function initSaude() {
     if (!document.getElementById("chart-diab-idade")) return;
-    render("assets/data/diabetes_charts.json", "chart-diab-fatores", function (d) {
+    render("assets/data/diabetes_charts.json", ["chart-diab-idade", "chart-diab-fatores"], function (d) {
       bar("chart-diab-idade",
         d.prevalencia_por_idade.map(function (r) { return "faixa " + r.faixa_etaria; }),
         d.prevalencia_por_idade.map(function (r) { return r.prevalencia; }),
@@ -70,7 +75,7 @@
 
   function initFraude() {
     if (!document.getElementById("chart-fraude-pr")) return;
-    render("assets/data/fraud_threshold.json", "chart-fraude-pr", function (d) {
+    render("assets/data/fraud_threshold.json", ["chart-fraude-pr", "chart-fraude-custo"], function (d) {
       if (!window.Plotly) return fail("chart-fraude-pr", "Gráficos interativos exigem internet (CDN Plotly).");
       var s = d.sweep;
       Plotly.newPlot("chart-fraude-pr", [

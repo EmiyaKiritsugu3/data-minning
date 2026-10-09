@@ -29,7 +29,10 @@ def test_pages_resolve_under_docs():
             u = m.group(1)
             if u.startswith(("http", "#", "mailto:")):
                 continue
-            assert (p.parent / u).exists(), f"{p}: {u}"
+            clean = u.split('#')[0].split('?')[0]
+            if not clean:
+                continue
+            assert (p.parent / clean).exists(), f"{p}: {u}"
         for m in re.finditer(r'''(?:src|href)=["']([^"']+)''', html):
             assert '"../' not in m.group(0) and "'../" not in m.group(0), p
             u = m.group(1)
@@ -37,7 +40,10 @@ def test_pages_resolve_under_docs():
                 continue
             if any(c in u for c in "<>{} \t\n\r"):
                 continue  # nbconvert <pre> code listing, not a real attr
-            assert (p.parent / u).exists(), f"{p}: {u}"
+            clean = u.split('#')[0].split('?')[0]
+            if not clean:
+                continue
+            assert (p.parent / clean).exists(), f"{p}: {u}"
 
 
 def test_json_contract():
@@ -45,9 +51,8 @@ def test_json_contract():
     from pathlib import Path
     d = Path("docs/assets/data")
     ol = json.loads((d / "olist_charts.json").read_text())
-    assert [r["faixa_atraso_dias"] for r in ol["atraso_vs_review"] if r["faixa_atraso_dias"] in
-            ["≤0", "1–7", "8–14", ">14"]] == ["≤0", "1–7", "8–14", ">14"][:len(
-            [r for r in ol["atraso_vs_review"]])]
+    bins = [r["faixa_atraso_dias"] for r in ol["atraso_vs_review"]]
+    assert bins == ["≤0", "1–7", "8–14", ">14"]
     di = json.loads((d / "diabetes_charts.json").read_text())
     for k, v in di["fatores"].items():
         assert v["com_fator"] is not None and v["sem_fator"] is not None, k
