@@ -20,15 +20,79 @@
     </nav>
   </header>
   <main>
-    <h2>Análises de mineração de dados</h2>
-    <p>Site estático com três estudos de caso em datasets do Kaggle,
-       aplicando técnicas de mineração de dados para apoio à decisão.</p>
-    <ul>
-      <li><a href="ecommerce.html">E-commerce Olist</a> — segmentação e padrões de compra.</li>
-      <li><a href="saude.html">Diabetes</a> — classificação e fatores de risco.</li>
-      <li><a href="fraude.html">Fraude em cartão de crédito</a> — detecção de transações anômalas.</li>
-      <li><a href="relatorio.html">Relatório</a> — síntese comparativa para decisão.</li>
-    </ul>
+    <h2>Análises de mineração de dados para apoio à decisão</h2>
+    <p>Site estático com três estudos de caso em datasets do Kaggle, cada um com
+    EDA, mineração (clusterização, classificação, associação/limiar) e
+    recomendações no formato decisão. Dois estudos usam dados sintéticos
+    ilustrativos (avisado em cada página); o de fraude usa os dados reais.
+    A síntese comparativa está em <a href="relatorio.html">Relatório</a>.</p>
+
+    <h3>Os três casos</h3>
+    <section>
+      <article>
+        <h4>E-commerce brasileiro (Olist) — <a href="ecommerce.html">ver análise</a></h4>
+        <p><b>Dados sintéticos ilustrativos</b> (seed 42, esquema da coleção Olist).</p>
+        <ul>
+          <li><b>Volume:</b> 6000 pedidos, 7337 itens (join orders + order_items + customers).</li>
+          <li><b>Técnicas:</b> KMeans k=4 sobre RFM, árvore de decisão (acurácia 0,80), co-ocorrência de categorias.</li>
+          <li><b>Holofote:</b> o atraso médio cresce nas notas baixas — atraso &gt; 7 dias derruba o review;
+          priorizar estoque regional protege a satisfação.</li>
+        </ul>
+      </article>
+      <article>
+        <h4>Saúde (Diabetes) — <a href="saude.html">ver análise</a></h4>
+        <p><b>Dados sintéticos ilustrativos</b> (fallback seed 42, n=5000, prevalência 0,21; fonte real: BRFSS 2015).</p>
+        <ul>
+          <li><b>Volume:</b> 5000 indivíduos, 20 colunas de indicadores de saúde.</li>
+          <li><b>Técnicas:</b> KMeans k=3 (perfis de risco), árvore de decisão (acurácia 0,559), Apriori (19 itemsets, 6 regras).</li>
+          <li><b>Holofote:</b> regra de triagem — pressão alta + colesterol alto + idade avançada, ou IMC ≥ 30 +
+          sedentarismo, identifica quem encaminhar ao rastreio prioritário.</li>
+        </ul>
+      </article>
+      <article>
+        <h4>Fraude em cartão de crédito — <a href="fraude.html">ver análise</a></h4>
+        <p><b>Dados reais do Kaggle</b> (<code>mlg-ulb/creditcardfraud</code>).</p>
+        <ul>
+          <li><b>Volume:</b> 284.807 transações europeias, 492 fraudes (0,17%).</li>
+          <li><b>Técnicas:</b> KMeans, árvore vs. regressão logística, análise de limiar por custo esperado.</li>
+          <li><b>Holofote:</b> perder uma fraude custa 50× uma revisão manual (FN=500 vs FP=10) —
+          o limiar de custo mínimo (0,98; precision 0,562, recall 0,831) privilegia recall.</li>
+        </ul>
+      </article>
+    </section>
+
+    <h3>Tabela comparativa SAD</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Domínio</th>
+          <th>Decisão-tipo</th>
+          <th>Dado-gargalo</th>
+          <th>Técnica que mais rendeu</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>E-commerce (Olist)</td>
+          <td>Onde estocar / quem fidelizar / que bundle ofertar</td>
+          <td>Nulos de entrega (~3%) e outliers de preço/frete</td>
+          <td>KMeans sobre RFM (isolou o segmento de alto valor: 295 clientes, ticket ~973)</td>
+        </tr>
+        <tr>
+          <td>Saúde (Diabetes)</td>
+          <td>Quem encaminhar ao rastreio prioritário</td>
+          <td>Fallback sintético (n=5000); classe minoritária (prevalência 0,21)</td>
+          <td>KMeans (perfis de risco) + regras de associação (triagem pressão/colesterol/idade)</td>
+        </tr>
+        <tr>
+          <td>Fraude (cartão)</td>
+          <td>Aprovar, revisar ou bloquear cada transação (limiar)</td>
+          <td>Desbalanceamento extremo (0,17% de fraude)</td>
+          <td>Análise de limiar por custo (threshold 0,98 com recall 0,831)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Detalhes, limitações e próximos passos: <a href="relatorio.html">Relatório comparativo</a>.</p>
   </main>
   <footer>
     <p>Disciplina SAD — Mineração de Dados. Dados brutos (Kaggle) não versionados; ver README.</p>

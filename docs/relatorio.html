@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relatório comparativo — SAD Mineração de Dados</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="ecommerce.html">E-commerce (Olist)</a></li>
+        <li><a href="saude.html">Saúde (Diabetes)</a></li>
+        <li><a href="fraude.html">Fraude (Cartão de Crédito)</a></li>
+        <li><a href="relatorio.html">Relatório</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>Relatório comparativo: o que os três casos ensinam</h2>
+    <p>Os três estudos — <a href="ecommerce.html">E-commerce (Olist)</a>,
+    <a href="saude.html">Saúde (Diabetes)</a> e
+    <a href="fraude.html">Fraude em cartão de crédito</a> — aplicam o mesmo
+    roteiro (EDA → preparação → mineração → regra de decisão) a domínios
+    diferentes. E-commerce e saúde usam dados sintéticos ilustrativos (avisado
+    nas páginas); fraude usa os dados reais do Kaggle
+    (<code>mlg-ulb/creditcardfraud</code>: 284.807 transações, 492 fraudes).</p>
+
+    <h3>1. O que é comum nos três</h3>
+    <ul>
+      <li><b>Desbalanceamento.</b> Em todos os casos a classe de interesse é minoria:
+      fraudes são 0,17% das transações; diabéticos têm prevalência 0,21 na base de
+      saúde; no e-commerce o segmento de alto valor tem só 295 de 3214 clientes e as
+      notas baixas (≤3) são minoria. Métricas cruas como acurácia enganam — por isso
+      fraude se avalia por precision/recall/custo e saúde por matriz de confusão.</li>
+      <li><b>Top-correlações que viram regra.</b> Cada EDA entregou um par forte que
+      sustenta a decisão: atraso × nota (atraso &gt; 7 dias derruba o review);
+      pressão/colesterol/idade/IMC × diabetes (base da triagem); V3/V14/V17/V12/V10
+      (maiores desvios entre fraude e transação legítima) e horário (madrugada, pico
+      de 1,7% às 2h) × fraude.</li>
+      <li><b>Clusters antes de classificar.</b> Os três usam KMeans para segmentar
+      antes de decidir: k=4 sobre RFM (e-commerce), k=3 de perfis de risco
+      (tamanhos 1294/1590/2116 em saúde) e k=4 sobre transações (fraude, onde um
+      cluster concentrou tickets altos). Segmentar primeiro barateia a decisão —
+      cada segmento ganha uma ação distinta.</li>
+    </ul>
+
+    <h3>2. O que difere</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Aspecto</th>
+          <th>E-commerce</th>
+          <th>Saúde</th>
+          <th>Fraude</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Natureza dos dados</td>
+          <td>Sintéticos (ilustrativos)</td>
+          <td>Sintéticos (ilustrativos)</td>
+          <td>Reais (Kaggle)</td>
+        </tr>
+        <tr>
+          <td>Custo do erro</td>
+          <td>Simétrico/receita (nota baixa, recompra perdida)</td>
+          <td>Falso negativo grave (diabetes não detectado)</td>
+          <td>Assimétrico explícito: FN=500 vs FP=10 (50×)</td>
+        </tr>
+        <tr>
+          <td>Decisão</td>
+          <td>Estratégica, em lote (estoque, fidelização, bundles)</td>
+          <td>Triagem populacional (encaminhar ao rastreio)</td>
+          <td>Operacional, por transação (aprovar/revisar/bloquear)</td>
+        </tr>
+        <tr>
+          <td>Técnica distintiva</td>
+          <td>Co-ocorrência de categorias (bundles)</td>
+          <td>Apriori (19 itemsets, 6 regras)</td>
+          <td>Limiar por custo esperado (threshold 0,98)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3. Limitações</h3>
+    <ul>
+      <li>E-commerce e saúde rodaram sobre dados sintéticos: padrões e números
+      (ex.: acurácia 0,80 da árvore Olist, 0,559 na saúde) são ilustrativos e precisam
+      de reexecução com os CSVs reais do Kaggle.</li>
+      <li>Amostras de 200 linhas em <code>assets/data/</code> servem à navegação, não
+      a conclusões estatísticas.</li>
+      <li>Modelos sem validação cruzada nem teste fora do tempo; limiar de fraude
+      calibrado num split único.</li>
+      <li>Sem avaliação de justiça/impacto (viés por UF, idade, horário) antes de operar.</li>
+    </ul>
+
+    <h3>4. Com mais tempo</h3>
+    <ul>
+      <li>Recomenda-se baixar os datasets reais (Olist 9 CSVs; BRFSS 2015) e reexecutar
+      os notebooks 01 e 02 para validar os padrões sintéticos.</li>
+      <li>Recomenda-se validação cruzada + busca de hiperparâmetros (k do KMeans,
+      profundidade da árvore, lift mínimo do Apriori) e curva de calibração do limiar
+      de fraude por faixa de horário/valor.</li>
+      <li>Recomenda-se piloto A/B das ações (estoque regional, step-up noturno,
+      rastreio do grupo de risco) medindo nota, recall operacional e custo real.</li>
+      <li>Recomenda-se auditoria de viés e monitoramento contínuo (drift de fraude,
+      sazonalidade do e-commerce, mudança de prevalência).</li>
+    </ul>
+  </main>
+  <footer>
+    <p>Disciplina SAD — Mineração de Dados. Dados brutos (Kaggle) não versionados; ver README.</p>
+  </footer>
+</body>
+</html>
