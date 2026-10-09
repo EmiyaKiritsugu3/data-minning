@@ -52,7 +52,7 @@ def build_olist():
     write(
         "olist_charts.json",
         {
-            "fonte": "amostra sample_olist.csv (200 linhas, dados sintéticos ilustrativos)",
+            "fonte": "amostra sample_olist.csv (200 linhas, dados reais Olist)",
             "receita_por_categoria": [
                 {"categoria": k, "receita": round(v, 2)}
                 for k, v in sorted(rec_cat.items(), key=lambda kv: -kv[1])[:8]
@@ -101,7 +101,7 @@ def build_diabetes():
     write(
         "diabetes_charts.json",
         {
-            "fonte": "amostra sample_diabetes.csv (200 linhas, dados sintéticos ilustrativos)",
+            "fonte": "amostra sample_diabetes.csv (200 linhas, dados reais BRFSS 2015)",
             "prevalencia_por_idade": [
                 {
                     "faixa_etaria": k,

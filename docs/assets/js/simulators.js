@@ -25,7 +25,7 @@
           afet.length + "</b> de " + d.delays.length + " (" + pct.toFixed(1) +
           "%) — <i>SE o atraso &gt; " + max + " dias derruba a nota, ENTÃO " +
           "esses pedidos pedem estoque regional ou frete prioritário.</i> " +
-          "<br><small>Base: amostra ilustrativa (seed 42), não o Olist real.</small>";
+          "<br><small>Base: amostra de 200 pedidos reais (Olist).</small>";
       }
       slider.addEventListener("input", update);
       update();
@@ -57,7 +57,7 @@
         pontos >= 1 ? "ATENÇÃO — reavaliar em 6–12 meses" : "RISCO BAIXO — rotina";
       out.innerHTML = "Faixa: <b>" + faixa + "</b> (" + pontos + " pts). " +
         "<i>Regra da análise: SE pressão+colesterol+idade avançada OU (IMC ≥ 30 + sedentarismo), " +
-        "ENTÃO priorizar.</i><br><small>Educacional, sobre amostra ilustrativa — não é diagnóstico.</small>";
+        "ENTÃO priorizar.</i><br><small>Educacional, sobre amostra real — não é diagnóstico.</small>";
     }
     root.querySelectorAll("input, select").forEach(function (el) {
       el.addEventListener("input", update);
