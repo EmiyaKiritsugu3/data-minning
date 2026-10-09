@@ -21,14 +21,18 @@
   </header>
   <main>
     <h2>E-commerce brasileiro (Olist): segmentação e padrões de compra</h2>
-    <p>Fonte real: <code>kaggle datasets download olistbr/brazilian-ecommerce</code>
-    (coleção com 9 CSVs). Neste ambiente sem credencial Kaggle a análise usa dados
-    sintéticos realistas com o mesmo esquema (ver <code>notebooks/01_ecommerce.ipynb</code>).
+    <p><b>Aviso — dados sintéticos ilustrativos:</b> sem credencial Kaggle neste ambiente,
+    esta análise usa dados sintéticos realistas (seed 42) com o esquema da coleção Olist;
+    os resultados são <b>ilustrativos</b>, não do dataset real. Fonte real:
+    <code>kaggle datasets download olistbr/brazilian-ecommerce</code> — com credenciais,
+    baixe os 9 CSVs para <code>data/</code> e reexecute
+    <code>notebooks/01_ecommerce.ipynb</code> para regenerar tudo com dados reais.
     Amostra de 200 linhas em <a href="assets/data/sample_olist.csv">sample_olist.csv</a>.</p>
 
     <h3>1. Entendimento dos dados</h3>
     <p>A coleção Olist cobre pedidos, itens, clientes, produtos, avaliações, pagamentos,
-    vendedores, geolocalização e tradução de categorias:</p>
+    vendedores, geolocalização e tradução de categorias (tabela gerada com
+    <code>df_to_html_table</code> no notebook):</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
