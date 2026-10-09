@@ -23,7 +23,8 @@
     <h2>E-commerce brasileiro (Olist): segmentação e padrões de compra</h2>
     <p><b>Dados reais — Olist Brazilian E-commerce</b> (<code>olistbr/brazilian-ecommerce</code>,
     Kaggle): 9 CSVs em <code>data/</code> (não versionados) — <b>99.441 pedidos</b>
-    (04/set/2016–17/out/2018), <b>112.650 itens</b>, <b>96.096 clientes únicos</b>,
+    (04/set/2016–17/out/2018), <b>112.650 itens</b>, <b>95.420 clientes únicos</b> no join
+    (96.096 na base de clientes),
     27 UFs e 73 categorias. Join <code>orders ⨝ items ⨝ customers</code> (+ reviews e
     categoria do produto) = <b>112.650 linhas</b> (98.666 pedidos com itens);
     <code>notebooks/01_ecommerce.ipynb</code> executado de ponta a ponta com esses dados.
@@ -247,10 +248,11 @@
 
     <h3>3. EDA</h3>
     <p>O atraso médio cai de −5,94 dias (nota 1) a −13,42 dias (nota 5): quem recebe antes do
-    prazo avalia melhor — e a nota média despenca de 4,15 (entrega no prazo) para 2,68
-    (1–7 dias de atraso) e ~1,7 (mais de 7 dias). As categorias de maior receita são
+    prazo avalia melhor — e a nota média despenca de 4,21 (entrega no prazo) para 2,68
+    (1–7 dias de atraso) e 1,70 (mais de 7 dias; pedidos sem entrega: 1,74). A receita bruta
+    é de R$13.591.643,70. As categorias de maior receita são
     beleza_saude, relogios_presentes e cama_mesa_banho; SP concentra a receita por UF;
-    o frete médio é mais alto no Norte/Nordeste (RR R$41,78) e mais baixo em SP (R$15,03) —
+    o frete médio é mais alto no Norte/Nordeste (RR R$42,98) e mais baixo em SP (R$15,15) —
     sem distância de CD nos dados reais, a figura de frete traz o frete médio por UF.</p>
     <figure><img src="assets/img/olist_atraso_review.png" alt="Atraso médio por review_score"><figcaption>Atraso médio por nota (dados reais).</figcaption></figure>
     <figure><img src="assets/img/olist_receita_categoria.png" alt="Receita por categoria"><figcaption>Receita por categoria (top 10, dados reais).</figcaption></figure>
@@ -274,39 +276,40 @@
   <tbody>
     <tr>
       <td>0</td>
-      <td>243.50</td>
-      <td>1.01</td>
-      <td>696.84</td>
-      <td>4584</td>
+      <td>133.52</td>
+      <td>1.00</td>
+      <td>113.60</td>
+      <td>51886</td>
     </tr>
     <tr>
       <td>1</td>
-      <td>393.96</td>
+      <td>393.69</td>
       <td>1.00</td>
-      <td>103.71</td>
-      <td>37397</td>
+      <td>114.48</td>
+      <td>38378</td>
     </tr>
     <tr>
       <td>2</td>
-      <td>133.38</td>
-      <td>1.00</td>
-      <td>103.14</td>
-      <td>50558</td>
+      <td>226.18</td>
+      <td>2.11</td>
+      <td>243.05</td>
+      <td>2883</td>
     </tr>
     <tr>
       <td>3</td>
-      <td>226.16</td>
-      <td>2.12</td>
-      <td>242.38</td>
-      <td>2881</td>
+      <td>244.35</td>
+      <td>1.01</td>
+      <td>1145.31</td>
+      <td>2273</td>
     </tr>
   </tbody>
 </table>
     <figure><img src="assets/img/olist_clusters_rfm.png" alt="Clusters KMeans em RFM"><figcaption>Segmentos KMeans (recência × monetário).</figcaption></figure>
     <p><b>Classificação (árvore de decisão).</b> A árvore prevê <code>review_score &gt;= 4</code>
-    (75,5% da base) a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
-    (atributos mais importantes: delay_fill 0,29, freight_ratio 0,26, freight_value 0,21).
-    A matriz de confusão no teste (acurácia 0.75):</p>
+    (77,1% da base) a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
+    (atributos mais importantes: freight_ratio 0,26, delay_fill 0,25, freight_c 0,19,
+    price_c 0,19; split por pedido via GroupShuffleSplit, 0 pedidos vazados treino/teste).
+    A matriz de confusão no teste (acurácia 0,69):</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -318,13 +321,13 @@
   <tbody>
     <tr>
       <th>real 0 (&lt;=3)</th>
-      <td>4081</td>
-      <td>4129</td>
+      <td>3320</td>
+      <td>5055</td>
     </tr>
     <tr>
       <th>real 1 (&gt;=4)</th>
-      <td>4407</td>
-      <td>20896</td>
+      <td>5405</td>
+      <td>19753</td>
     </tr>
   </tbody>
 </table>
@@ -412,14 +415,16 @@
     <h3>5. Apoio à decisão — recomendações</h3>
     <ul>
       <li><b>Recomenda-se blindar o SLA de entrega no Sudeste:</b> se a nota média despenca de
-      4,15 (no prazo) para 2,68 (1–7 dias de atraso) e ~1,7 (mais de 7 dias), então priorizar
+      4,21 (no prazo) para 2,68 (1–7 dias de atraso) e 1,70 (mais de 7 dias; sem entrega: 1,74),
+      então priorizar
       estoque regional nas UFs de maior receita (SP/RJ/MG) reduz o atraso e protege o review.</li>
-      <li><b>Recomenda-se fidelizar os clusters de alto valor:</b> se o KMeans isola 4.584 clientes
-      de alto valor (gasto médio ~R$697) e 2.881 recorrentes (freq. 2,12), então oferecer frete
+      <li><b>Recomenda-se fidelizar os clusters de alto valor:</b> se o KMeans isola 2.273 clientes
+      de alto valor (gasto médio ~R$1.145) e 2.883 recorrentes (freq. 2,11), então oferecer frete
       grátis progressivo a esses segmentos aumenta a recompra.</li>
-      <li><b>Recomenda-se rever a tabela de frete do Norte/Nordeste:</b> se atraso (29% da importância)
-      e razão frete/preço (26%) lideram a árvore (acurácia 0,75) e o frete médio em RR (R$41,78)
-      é ~3× o de SP (R$15,03), então subsidiar ou compartilhar o frete de longa distância
+      <li><b>Recomenda-se rever a tabela de frete do Norte/Nordeste:</b> se razão frete/preço (26%)
+      e atraso (delay_fill, 25%) lideram a árvore (acurácia 0,69, split por pedido sem vazamento)
+      e o frete médio em RR (R$42,98)
+      é ~3× o de SP (R$15,15), então subsidiar ou compartilhar o frete de longa distância
       preserva a satisfação.</li>
       <li><b>Recomenda-se bundle das categorias co-ocorrentes:</b> se
       cama_mesa_banho + moveis_decoracao aparecem juntos em 70 pedidos (top par),

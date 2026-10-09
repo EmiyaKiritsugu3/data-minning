@@ -16,6 +16,7 @@
     if (!root) return;
     var slider = root.querySelector('input[type="range"]');
     var out = root.querySelector(".sim-result");
+    if (!slider || !out) return;
     get("assets/data/olist_charts.json").then(function (d) {
       function update() {
         var max = parseFloat(slider.value);
@@ -25,7 +26,7 @@
           afet.length + "</b> de " + d.delays.length + " (" + pct.toFixed(1) +
           "%) — <i>SE o atraso &gt; " + max + " dias derruba a nota, ENTÃO " +
           "esses pedidos pedem estoque regional ou frete prioritário.</i> " +
-          "<br><small>Base: amostra de 200 pedidos reais (Olist).</small>";
+          "<br><small>Base: amostra de 200 pedidos reais (Olist) — 196 com atraso calculado; 4 sem data.</small>";
       }
       slider.addEventListener("input", update);
       update();
@@ -39,6 +40,7 @@
     var root = document.getElementById("sim-risco");
     if (!root) return;
     var out = root.querySelector(".sim-result");
+    if (!out) return;
     function update() {
       var v = function (id) {
         var el = root.querySelector("#" + id);
@@ -71,6 +73,7 @@
     if (!root) return;
     var slider = root.querySelector('input[type="range"]');
     var out = root.querySelector(".sim-result");
+    if (!slider || !out) return;
     get("assets/data/fraud_threshold.json").then(function (d) {
       function nearest(x) {
         return d.sweep.reduce(function (a, b) {

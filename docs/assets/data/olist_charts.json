@@ -3,7 +3,7 @@
  "receita_por_categoria": [
   {
    "categoria": "cool_stuff",
-   "receita": 2924.82
+   "receita": 2942.82
   },
   {
    "categoria": "relogios_presentes",
@@ -12,6 +12,10 @@
   {
    "categoria": "beleza_saude",
    "receita": 2135.71
+  },
+  {
+   "categoria": "automotivo",
+   "receita": 1800.4
   },
   {
    "categoria": "informatica_acessorios",
@@ -28,24 +32,20 @@
   {
    "categoria": "utilidades_domesticas",
    "receita": 1471.26
-  },
-  {
-   "categoria": "ferramentas_jardim",
-   "receita": 1455.57
   }
  ],
  "receita_por_uf": [
   {
    "uf": "SP",
-   "receita": 9603.04
+   "receita": 10022.04
   },
   {
    "uf": "RJ",
-   "receita": 4623.88
+   "receita": 5123.78
   },
   {
    "uf": "MG",
-   "receita": 2402.49
+   "receita": 2411.49
   },
   {
    "uf": "SC",

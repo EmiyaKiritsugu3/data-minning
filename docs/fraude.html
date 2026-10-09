@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="pt-BR">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Fraude em Cartão de Crédito — Mineração de Dados</title>
@@ -7313,7 +7313,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Deteccao-de-fraude-em-cartao-de-credito">Deteccao de fraude em cartao de credito<a class="anchor-link" href="#Deteccao-de-fraude-em-cartao-de-credito">¶</a></h1><p><strong>Objetivo:</strong> apoiar a decisao de aprovar, revisar ou bloquear transacoes a partir de mineracao de dados.</p>
+<h1 id="Deteccao-de-fraude-em-cartao-de-credito">Detecção de fraude em cartão de crédito<a class="anchor-link" href="#Deteccao-de-fraude-em-cartao-de-credito">¶</a></h1><p><strong>Objetivo:</strong> apoiar a decisao de aprovar, revisar ou bloquear transacoes a partir de mineracao de dados.</p>
 <p><strong>Fonte:</strong> <code>mlg-ulb/creditcardfraud</code> (284.807 transacoes europeias, 492 fraudes = 0,17%).
 Comando real usado para obter os dados:</p>
 <div class="highlight"><pre><span></span>kaggle<span class="w"> </span>datasets<span class="w"> </span>download<span class="w"> </span>mlg-ulb/creditcardfraud
@@ -8574,6 +8574,7 @@ de custo minimo se desloca; monitorar precision/recall em producao.</li>
 <p><label>Busca global nas tabelas:
 <input type="search" id="global-table-filter" placeholder="ex: 0.98, 500, recall…"></label>
 <small>Todas as tabelas ganham busca própria e ordenação por clique no cabeçalho.</small></p>
+<p>Amostra real: <a href="assets/data/sample_fraud.csv">sample_fraud.csv</a> (200 linhas: 100 fraudes + 100 legítimas; oversampling documentado — no real são 0,17%).</p>
 <h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
 <div id="chart-fraude-pr" class="interactive-chart"></div>
 <div id="chart-fraude-custo" class="interactive-chart"></div>
