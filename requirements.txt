@@ -5,4 +5,4 @@ seaborn==0.13.2
 scikit-learn==1.5.2
 mlxtend==0.23.1
 jupyter==1.1.0
-nbconvert==7.16.4
+nbconvert==7.17.1
