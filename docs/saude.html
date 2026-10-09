@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="pt-BR">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Saúde (Diabetes) — Mineração de Dados</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
@@ -7793,8 +7793,8 @@ a.anchor-link {
     white-space: normal;
   }
 </style>
-<!-- End of mermaid configuration -->  <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<!-- End of mermaid configuration -->
+  <link rel="stylesheet" href="assets/css/style.css"></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
   <header>
     <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
@@ -7823,9 +7823,10 @@ Comando real para baixar os dados (requer conta Kaggle + <code>kaggle.json</code
 <p><strong>Dados reais:</strong> <code>data/diabetes_binary_health_indicators_BRFSS2015.csv</code>
 (BRFSS 2015 original desbalanceado — n=253.680, prevalência ≈ 0,14).
 EDA, KMeans e Apriori rodam na prevalência real; só a árvore usa undersampling
-balanceado no treino (documentado na §2). O fallback sintético (seed 42, n=5000,
-mesmas colunas do dataset original) permanece apenas como último recurso
-se <code>data/</code> estiver ausente.</p>
+balanceado só no treino (documentado na §2) — o teste mantém a prevalência
+real ≈ 0,14 (métrica em teste balanceado seria otimista). O fallback sintético
+(seed 42, n=5000, 20 colunas — sem Education/Income, fallback aproximado)
+permanece apenas como último recurso se <code>data/</code> estiver ausente.</p>
 </blockquote>
 <p>Blocos: entendimento → preparação (balanceamento documentado, encoding binário) → EDA →
 mineração (KMeans k=3, árvore de decisão + matriz de confusão, Apriori) → decisão (regra de triagem + prevenções).</p>
@@ -7896,19 +7897,23 @@ dificuldade de locomoção (<code>DiffWalk</code>), sexo e hábitos.</p>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Original desbalanceado primeiro (prevalência real ~0,14); 5050split só como alternativa.</span>
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"data"</span>
 <span class="n">CANDIDATES</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"../data/diabetes_binary_health_indicators_BRFSS2015.csv"</span><span class="p">,</span>
-    <span class="s2">"../data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv"</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"diabetes_binary_health_indicators_BRFSS2015.csv"</span><span class="p">),</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"diabetes_binary_5050split_health_indicators_BRFSS2015.csv"</span><span class="p">),</span>
 <span class="p">]</span>
 <span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">is_real</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">CANDIDATES</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">load_csv</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"Carregado:"</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">is_real</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">break</span>
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
         <span class="k">continue</span>
 <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Sem data/ local -&gt; fallback SINTÉTICO realista (seed 42, n=5000)."</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Comando real: kaggle datasets download alexteboul/diabetes-health-indicators-dataset -p data --unzip"</span><span class="p">)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="mi">5000</span>
@@ -7947,6 +7952,7 @@ dificuldade de locomoção (<code>DiffWalk</code>), sexo e hábitos.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"shape:"</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"prevalência:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">'Diabetes_binary'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"is_real:"</span><span class="p">,</span> <span class="n">is_real</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8240,6 +8246,13 @@ prevalência: 0.1393
 </table>
 </div>
 </div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>is_real: True
+</pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -8252,9 +8265,10 @@ prevalência: 0.1393
 <h2 id="2.-Prepara%C3%A7%C3%A3o-%E2%80%94-balanceamento-documentado-e-encoding-bin%C3%A1rio">2. Preparação — balanceamento documentado e encoding binário<a class="anchor-link" href="#2.-Prepara%C3%A7%C3%A3o-%E2%80%94-balanceamento-documentado-e-encoding-bin%C3%A1rio">¶</a></h2><ul>
 <li><strong>Encoding:</strong> o dataset original já é binário (0/1) nas colunas indicadoras; <code>GenHlth</code> (1–5),
 <code>Age</code> (1–13) e contagens de dias são mantidos como ordinais/numéricos — nenhum one-hot necessário.</li>
-<li><strong>Balanceamento (documentado):</strong> a prevalência é minoritária (~14% no original desbalanceado), então a árvore é treinada
-em amostra <strong>balanceada por undersampling aleatório da classe majoritária</strong> (seed 42).
-KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o classificador usa a base balanceada.</li>
+<li><strong>Balanceamento (documentado):</strong> a prevalência é minoritária (~14% no original desbalanceado). O split 75/25
+estratificado é feito <strong>primeiro, na base real</strong>; o undersampling aleatório da classe majoritária (seed 42) é
+aplicado <strong>só no treino</strong>. KMeans e Apriori usam a base cheia (distribuição real preservada); o teste mantém a
+prevalência real ≈ 0,14, então acurácia/PPV/NPV são medidos em prevalência real.</li>
 </ul>
 </div>
 </div>
@@ -8269,14 +8283,12 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Distribuição original (proporção):"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
-<span class="n">df0</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">Diabetes_binary</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
-<span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">Diabetes_binary</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
-<span class="n">df0b</span> <span class="o">=</span> <span class="n">df0</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">df_bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df0b</span><span class="p">,</span> <span class="n">df1</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_antes"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">df0</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">)],</span>
-                      <span class="s2">"n_depois_undersampling"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">df0b</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">)]})</span>
+<span class="n">n0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="n">n1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_antes"</span><span class="p">:</span> <span class="p">[</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">],</span>
+                    <span class="s2">"n_undersampling_só_treino"</span><span class="p">:</span> <span class="p">[</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">]})</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">bal</span><span class="p">)))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"base balanceada:"</span><span class="p">,</span> <span class="n">df_bal</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5)."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8302,7 +8314,7 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <tr style="text-align: right;">
 <th>classe</th>
 <th>n_antes</th>
-<th>n_depois_undersampling</th>
+<th>n_undersampling_só_treino</th>
 </tr>
 </thead>
 <tbody>
@@ -8323,7 +8335,7 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>base balanceada: (70692, 22)
+<pre>EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5).
 </pre>
 </div>
 </div>
@@ -8358,9 +8370,9 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-    <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;img src="../docs/assets/img/</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s1">" alt="</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1">"&gt;'</span><span class="p">))</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">'&gt;"</span><span class="p">))</span>
 
 
 <span class="n">prev_bar</span><span class="p">(</span><span class="s2">"Age"</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">14</span><span class="p">)},</span>
@@ -8383,25 +8395,25 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Prevalência de diabetes por faixa etária" src="../docs/assets/img/diabetes_prev_idade.png"/>
+<img alt="Prevalência de diabetes por faixa etária" src="assets/img/diabetes_prev_idade.png"/>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Prevalência de diabetes por pressão arterial" src="../docs/assets/img/diabetes_prev_pressao.png"/>
+<img alt="Prevalência de diabetes por pressão arterial" src="assets/img/diabetes_prev_pressao.png"/>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Prevalência de diabetes por colesterol" src="../docs/assets/img/diabetes_prev_colesterol.png"/>
+<img alt="Prevalência de diabetes por colesterol" src="assets/img/diabetes_prev_colesterol.png"/>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Prevalência de diabetes por atividade física" src="../docs/assets/img/diabetes_prev_atividade.png"/>
+<img alt="Prevalência de diabetes por atividade física" src="assets/img/diabetes_prev_atividade.png"/>
 </div>
 </div>
 </div>
@@ -8422,9 +8434,9 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
             <span class="n">center</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">square</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cbar_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">"shrink"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">},</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Correlação entre fatores e diabetes"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_correlacao.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_correlacao.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="../docs/assets/img/diabetes_correlacao.png" alt="Correlacoes"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Correlacoes'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8437,7 +8449,7 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Correlacoes" src="../docs/assets/img/diabetes_correlacao.png"/>
+<img alt="Correlacoes" src="assets/img/diabetes_correlacao.png"/>
 </div>
 </div>
 </div>
@@ -8479,9 +8491,9 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Faixa etária"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"cluster"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_kmeans.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_kmeans.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="../docs/assets/img/diabetes_kmeans.png" alt="Clusters KMeans"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Clusters KMeans'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8556,7 +8568,7 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Clusters KMeans" src="../docs/assets/img/diabetes_kmeans.png"/>
+<img alt="Clusters KMeans" src="assets/img/diabetes_kmeans.png"/>
 </div>
 </div>
 </div>
@@ -8568,8 +8580,10 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">5. Árvore de decisão + matriz de confusão<a class="anchor-link" href="#5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">¶</a></h2><p>A árvore prevê <code>Diabetes_binary</code> na base balanceada (split 75/25 estratificado).
-A matriz de confusão e a acurácia resumem o desempenho; a importância revela o top-5 de fatores.</p>
+<h2 id="5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">5. Árvore de decisão + matriz de confusão<a class="anchor-link" href="#5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">¶</a></h2><p>A árvore prevê <code>Diabetes_binary</code> com split 75/25 estratificado feito primeiro na base real;
+o undersampling balanceia <strong>só o treino</strong> e o teste mantém a prevalência real ≈ 0,14.
+A matriz de confusão e a acurácia resumem o desempenho em prevalência real
+(métrica em teste balanceado seria otimista); a importância revela o top-5 de fatores.</p>
 </div>
 </div>
 </div>
@@ -8582,11 +8596,16 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">df_bal</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">])</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">df_bal</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">,</span> <span class="s2">"cluster"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span>
 <span class="n">Xtr</span><span class="p">,</span> <span class="n">Xte</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">yte</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
-<span class="n">tree</span> <span class="o">=</span> <span class="n">run_tree</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">)</span>
-<span class="n">pred</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">)</span>
+<span class="n">neg</span> <span class="o">=</span> <span class="n">Xtr</span><span class="p">[</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>  <span class="c1"># undersample SÓ treino</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">Xtr</span><span class="p">[</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">Xtr_b</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">neg</span><span class="p">,</span> <span class="n">pos</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">ytr_b</span> <span class="o">=</span> <span class="n">ytr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">Xtr_b</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"treino balanceado: </span><span class="si">{</span><span class="n">Xtr_b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, holdout prevalência: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">run_tree</span><span class="p">(</span><span class="n">Xtr_b</span><span class="p">,</span> <span class="n">ytr_b</span><span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">)</span>  <span class="c1"># Xte com prevalência real ~0,14</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">confusion_summary</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Acurácia:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Matriz de confusão [[VN, FP], [FN, VP]]:"</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s2">"confusion_matrix"</span><span class="p">])</span>
@@ -8603,18 +8622,18 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Predito"</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Real"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_confusao.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_confusao.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="../docs/assets/img/diabetes_confusao.png" alt="Matriz de confusao"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Matriz de confusao'&gt;"</span><span class="p">))</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span><span class="n">top5</span><span class="p">[</span><span class="s2">"fator"</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">top5</span><span class="p">[</span><span class="s2">"importancia"</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Top-5 fatores (importância da árvore)"</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Importância"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_importancia.png"</span><span class="p">)</span>
+<span class="n">url_imp</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_importancia.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="../docs/assets/img/diabetes_importancia.png" alt="Top fatores"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url_imp</span><span class="si">}</span><span class="s2">' alt='Top fatores'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8627,8 +8646,9 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Acurácia: 0.655
-Matriz de confusão [[VN, FP], [FN, VP]]: [[5849, 2988], [3116, 5720]]
+<pre>treino balanceado: (53018, 21), holdout prevalência: 0.1393
+Acurácia: 0.659
+Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 </pre>
 </div>
 </div>
@@ -8645,23 +8665,23 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[5849, 2988], [3116, 5720]]
 <tbody>
 <tr>
 <td>HighBP</td>
-<td>0.1501</td>
+<td>0.1480</td>
 </tr>
 <tr>
 <td>BMI</td>
-<td>0.1331</td>
+<td>0.1380</td>
 </tr>
 <tr>
 <td>Age</td>
-<td>0.0988</td>
+<td>0.1039</td>
 </tr>
 <tr>
 <td>GenHlth</td>
-<td>0.0943</td>
+<td>0.1003</td>
 </tr>
 <tr>
 <td>Income</td>
-<td>0.0896</td>
+<td>0.0891</td>
 </tr>
 </tbody>
 </table>
@@ -8677,13 +8697,41 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[5849, 2988], [3116, 5720]]
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Matriz de confusao" src="../docs/assets/img/diabetes_confusao.png"/>
+<img alt="Matriz de confusao" src="assets/img/diabetes_confusao.png"/>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<img alt="Top fatores" src="../docs/assets/img/diabetes_importancia.png"/>
+<img alt="Top fatores" src="assets/img/diabetes_importancia.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7bc3bcbf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"prevalência holdout: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> (esperado ≈ 0.139)"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.139</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.02</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>prevalência holdout: 0.1393 (esperado ≈ 0.139)
+</pre>
 </div>
 </div>
 </div>
@@ -8705,7 +8753,7 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlxtend.frequent_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">apriori</span><span class="p">,</span> <span class="n">association_rules</span>
@@ -8754,17 +8802,17 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 </thead>
 <tbody>
 <tr>
-<td>frozenset({'HighBP'})</td>
-<td>frozenset({'Diabetes'})</td>
-<td>0.105</td>
-<td>0.244</td>
-<td>1.754</td>
-</tr>
-<tr>
 <td>frozenset({'Diabetes'})</td>
 <td>frozenset({'HighBP'})</td>
 <td>0.105</td>
 <td>0.753</td>
+<td>1.754</td>
+</tr>
+<tr>
+<td>frozenset({'HighBP'})</td>
+<td>frozenset({'Diabetes'})</td>
+<td>0.105</td>
+<td>0.244</td>
 <td>1.754</td>
 </tr>
 <tr>
@@ -8782,7 +8830,7 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <td>1.574</td>
 </tr>
 <tr>
-<td>frozenset({'HighChol', 'Smoker'})</td>
+<td>frozenset({'Smoker', 'HighChol'})</td>
 <td>frozenset({'HighBP'})</td>
 <td>0.134</td>
 <td>0.637</td>
@@ -8790,23 +8838,23 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 </tr>
 <tr>
 <td>frozenset({'HighBP'})</td>
-<td>frozenset({'HighChol', 'Smoker'})</td>
+<td>frozenset({'Smoker', 'HighChol'})</td>
 <td>0.134</td>
 <td>0.312</td>
 <td>1.484</td>
 </tr>
 <tr>
-<td>frozenset({'HighChol'})</td>
-<td>frozenset({'HighBP', 'Smoker'})</td>
-<td>0.134</td>
-<td>0.316</td>
-<td>1.476</td>
-</tr>
-<tr>
-<td>frozenset({'HighBP', 'Smoker'})</td>
+<td>frozenset({'Smoker', 'HighBP'})</td>
 <td>frozenset({'HighChol'})</td>
 <td>0.134</td>
 <td>0.626</td>
+<td>1.476</td>
+</tr>
+<tr>
+<td>frozenset({'HighChol'})</td>
+<td>frozenset({'Smoker', 'HighBP'})</td>
+<td>0.134</td>
+<td>0.316</td>
 <td>1.476</td>
 </tr>
 <tr>
@@ -8846,7 +8894,8 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <li>Recomenda-se rastreio combinado pressão + colesterol em ≥ 55 anos (faixas 9–13), onde a prevalência dispara.</li>
 <li>Recomenda-se acompanhamento de saúde geral (GenHlth ≥ 4) com avaliação de locomoção e dias de saúde ruim.</li>
 </ol>
-<p>A amostra abaixo (200 linhas reais) replica o formato dos dados para auditoria.</p>
+<p>A amostra abaixo (200 linhas aleatórias, seed 42, sem estratificação, da base carregada —
+reais quando <code>data/</code> presente, sintéticas caso contrário) replica o formato dos dados para auditoria.</p>
 </div>
 </div>
 </div>
@@ -8855,14 +8904,15 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"cluster"</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">outp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"../docs/assets/data/sample_diabetes.csv"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"cluster"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">outp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"docs"</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"sample_diabetes.csv"</span>
 <span class="n">outp</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">sample</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"sample:"</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">"bytes:"</span><span class="p">,</span> <span class="n">outp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"cluster"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">columns</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"sample REAL"</span> <span class="k">if</span> <span class="n">is_real</span> <span class="k">else</span> <span class="s2">"sample SINTÉTICO"</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">"bytes:"</span><span class="p">,</span> <span class="n">outp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
 </pre></div>
 </div>
@@ -8876,7 +8926,7 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>sample: (200, 22) bytes: 18129
+<pre>sample REAL (200, 22) bytes: 18129
 </pre>
 </div>
 </div>
@@ -9158,29 +9208,6 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 </div>
 </div>
 </div>
-<section>
-<h2>Painel interativo — explore, visualize, simule</h2>
-<p><label>Busca global nas tabelas:
-<input type="search" id="global-table-filter" placeholder="ex: 1, 30, faixa…"></label>
-<small>Todas as tabelas ganham busca própria e ordenação por clique no cabeçalho.</small></p>
-<h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
-<div id="chart-diab-idade" class="interactive-chart"></div>
-<div id="chart-diab-fatores" class="interactive-chart"></div>
-<div class="sim-box" id="sim-risco">
-<h3>Simulador SAD — faixa de risco</h3>
-<p>Preencha e veja a faixa pela regra de triagem da análise:</p>
-<label>IMC: <input type="number" id="sim-imc" value="27" min="10" max="60" step="0.1"></label>
-<label>Idade: <input type="number" id="sim-idade" value="55" min="18" max="100" step="1"></label>
-<label>Pressão alta: <select id="sim-pa"><option value="nao">Não</option><option value="sim" selected>Sim</option></select></label>
-<label>Colesterol alto: <select id="sim-col"><option value="nao">Não</option><option value="sim" selected>Sim</option></select></label>
-<label>Sedentário: <select id="sim-sed"><option value="nao">Não</option><option value="sim" selected>Sim</option></select></label>
-<p class="sim-result">Carregando…</p>
-</div>
-</section>
 </main>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-  <script src="assets/js/tables.js" defer></script>
-  <script src="assets/js/charts.js" defer></script>
-  <script src="assets/js/simulators.js" defer></script>
 </body>
 </html>
