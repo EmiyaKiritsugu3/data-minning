@@ -75,9 +75,9 @@
    "pedidos": 184
   },
   {
-   "faixa_atraso_dias": ">14",
-   "review_medio": 1.0,
-   "pedidos": 2
+   "faixa_atraso_dias": "1–7",
+   "review_medio": 4.0,
+   "pedidos": 5
   },
   {
    "faixa_atraso_dias": "8–14",
@@ -85,9 +85,9 @@
    "pedidos": 4
   },
   {
-   "faixa_atraso_dias": "1–7",
-   "review_medio": 4.0,
-   "pedidos": 5
+   "faixa_atraso_dias": ">14",
+   "review_medio": 1.0,
+   "pedidos": 2
   }
  ],
  "delays": [

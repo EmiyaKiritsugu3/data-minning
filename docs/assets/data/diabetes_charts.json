@@ -69,20 +69,20 @@
  ],
  "fatores": {
   "HighBP": {
-   "com_fator": null,
-   "sem_fator": null
+   "com_fator": 0.16,
+   "sem_fator": 0.042
   },
   "HighChol": {
-   "com_fator": null,
-   "sem_fator": null
+   "com_fator": 0.16,
+   "sem_fator": 0.042
   },
   "Smoker": {
-   "com_fator": null,
-   "sem_fator": null
+   "com_fator": 0.092,
+   "sem_fator": 0.088
   },
   "PhysActivity": {
-   "com_fator": null,
-   "sem_fator": null
+   "com_fator": 0.082,
+   "sem_fator": 0.113
   }
  }
 }

@@ -17,6 +17,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "assets" / "data"
 
+ORDEM = ["≤0", "1–7", "8–14", ">14"]
+
+
+def _is1(v):
+    try:
+        return float(v) == 1.0
+    except (TypeError, ValueError):
+        return False
+
 
 def write(name, payload):
     p = DATA / name
@@ -64,10 +73,10 @@ def build_olist():
             "atraso_vs_review": [
                 {
                     "faixa_atraso_dias": b,
-                    "review_medio": round(v["soma"] / v["n"], 2),
-                    "pedidos": v["n"],
+                    "review_medio": round(bins[b]["soma"] / bins[b]["n"], 2),
+                    "pedidos": bins[b]["n"],
                 }
-                for b, v in bins.items()
+                for b in [k for k in ORDEM if k in bins]
             ],
             "delays": sorted(
                 float(r["delay_days"])
@@ -92,8 +101,12 @@ def build_diabetes():
         faixas[age]["n"] += 1
     fatores = {}
     for col in ["HighBP", "HighChol", "Smoker", "PhysActivity"]:
-        a = [float(r["Diabetes_binary"]) for r in rows if r.get(col) == "1"]
-        b = [float(r["Diabetes_binary"]) for r in rows if r.get(col) == "0"]
+        a = [float(r["Diabetes_binary"]) for r in rows if _is1(r.get(col))]
+        b = [
+            float(r["Diabetes_binary"])
+            for r in rows
+            if not _is1(r.get(col)) and r.get(col) not in (None, "")
+        ]
         fatores[col] = {
             "com_fator": round(sum(a) / len(a), 3) if a else None,
             "sem_fator": round(sum(b) / len(b), 3) if b else None,
@@ -115,9 +128,17 @@ def build_diabetes():
     )
 
 
+def _to_int(s: str) -> int:
+    digits = re.sub(r"[^\d]", "", s)
+    if not digits:
+        raise ValueError(f"sem dígitos em {s!r}")
+    return int(digits)
+
+
 def build_fraude():
-    html = (ROOT / "docs" / "fraude.html").read_text()
+    html = (ROOT / "docs" / "fraude.html").read_text(encoding="utf-8")
     sweep = None
+    best = 0
     for m in re.finditer(r"<table[^>]*>.*?</table>", html, re.S):
         t = m.group(0)
         if "threshold" in t.lower() and "custo" in t.lower():
@@ -138,17 +159,21 @@ def build_fraude():
                             "precision": float(chunk[2].replace(",", ".")),
                             "recall": float(chunk[3].replace(",", ".")),
                             "f1": float(chunk[4].replace(",", ".")),
-                            "fp": int(chunk[5]),
-                            "fn": int(chunk[6]),
-                            "custo": int(chunk[7]),
+                            "fp": _to_int(chunk[5]),
+                            "fn": _to_int(chunk[6]),
+                            "custo": _to_int(chunk[7]),
                         }
                     )
                 except ValueError:
                     continue
-            if rows:
+            if rows and len(rows) > best:
                 sweep = rows
-                break
-    assert sweep, "tabela sweep não encontrada em docs/fraude.html"
+                best = len(rows)
+    if not sweep:
+        raise SystemExit(
+            "tabela sweep não encontrada em docs/fraude.html — "
+            "re-exporte docs/fraude.html pelo nbconvert e rode de novo"
+        )
     write(
         "fraud_threshold.json",
         {
