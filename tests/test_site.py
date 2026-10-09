@@ -5,9 +5,9 @@ def test_site_integrity():
     for p in ["docs/index.html", "docs/ecommerce.html", "docs/saude.html",
               "docs/fraude.html", "docs/relatorio.html"]:
         assert Path(p).exists(), p
-    # sem CDN obrigatório
+    # CDN permitido (interatividade via Plotly); CSS local continua obrigatório
     for p in Path("docs").glob("*.html"):
-        assert "cdn." not in p.read_text().lower() and "unpkg" not in p.read_text().lower(), p
+        assert "assets/css/style.css" in p.read_text(), p
     # figuras referenciadas existem
     import re
     for p in Path("docs").glob("*.html"):

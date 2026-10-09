@@ -54,3 +54,10 @@ for page in ["docs/ecommerce.html", "docs/saude.html", "docs/fraude.html"]:
 EOF
 
 echo "OK: notebooks executados e paginas regeneradas em docs/."
+
+# 4. Reaplica o painel interativo (o export cru do nbconvert nao o inclui)
+# e regenera os JSONs dos graficos/simuladores.
+python3 scripts/inject_interactive.py
+python3 scripts/build_interactive_data.py
+
+echo "OK: painel interativo reaplicado e JSONs regenerados."

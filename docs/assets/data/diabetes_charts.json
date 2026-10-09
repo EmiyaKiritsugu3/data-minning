@@ -1,0 +1,88 @@
+{
+ "fonte": "amostra sample_diabetes.csv (200 linhas, dados sintéticos ilustrativos)",
+ "prevalencia_por_idade": [
+  {
+   "faixa_etaria": 1,
+   "prevalencia": 0.0,
+   "n": 7
+  },
+  {
+   "faixa_etaria": 2,
+   "prevalencia": 0.118,
+   "n": 17
+  },
+  {
+   "faixa_etaria": 3,
+   "prevalencia": 0.222,
+   "n": 18
+  },
+  {
+   "faixa_etaria": 4,
+   "prevalencia": 0.143,
+   "n": 14
+  },
+  {
+   "faixa_etaria": 5,
+   "prevalencia": 0.05,
+   "n": 20
+  },
+  {
+   "faixa_etaria": 6,
+   "prevalencia": 0.3,
+   "n": 10
+  },
+  {
+   "faixa_etaria": 7,
+   "prevalencia": 0.133,
+   "n": 15
+  },
+  {
+   "faixa_etaria": 8,
+   "prevalencia": 0.111,
+   "n": 18
+  },
+  {
+   "faixa_etaria": 9,
+   "prevalencia": 0.308,
+   "n": 13
+  },
+  {
+   "faixa_etaria": 10,
+   "prevalencia": 0.316,
+   "n": 19
+  },
+  {
+   "faixa_etaria": 11,
+   "prevalencia": 0.286,
+   "n": 14
+  },
+  {
+   "faixa_etaria": 12,
+   "prevalencia": 0.286,
+   "n": 14
+  },
+  {
+   "faixa_etaria": 13,
+   "prevalencia": 0.476,
+   "n": 21
+  }
+ ],
+ "fatores": {
+  "HighBP": {
+   "com_fator": 0.324,
+   "sem_fator": 0.112
+  },
+  "HighChol": {
+   "com_fator": 0.325,
+   "sem_fator": 0.15
+  },
+  "Smoker": {
+   "com_fator": 0.276,
+   "sem_fator": 0.167
+  },
+  "PhysActivity": {
+   "com_fator": 0.159,
+   "sem_fator": 0.324
+  }
+ }
+}

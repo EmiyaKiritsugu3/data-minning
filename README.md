@@ -20,7 +20,13 @@ para a disciplina de Sistemas de Apoio à Decisão (SAD):
 1. Baixe os CSVs do Kaggle e coloque-os em `data/` (a pasta é gitignored).
 2. `pip install -r requirements.txt`
 3. `./run_all.sh` — executa os notebooks e regenera as páginas em `docs/`.
-4. Sirva localmente: `python -m http.server 8000 --directory docs`
+4. `python3 scripts/build_interactive_data.py` — regenera os JSONs dos
+   painéis interativos (`docs/assets/data/*_charts.json`, `fraud_threshold.json`).
+   O `run_all.sh` já executa este passo + `scripts/inject_interactive.py`
+   (reaplica painel interativo e scripts após o export cru do nbconvert);
+   rode-os manualmente se pular o `run_all.sh`. A sweep de fraude é
+   extraída de `docs/fraude.html`.
+5. Sirva localmente: `python -m http.server 8000 --directory docs`
    e abra `http://localhost:8000/`.
 
 ## Export manual (fallback sem `./run_all.sh`)
