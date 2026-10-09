@@ -31,7 +31,7 @@ order_id,customer_state,product_category_name,price,freight_value,delay_days,rev
 31116b5bedeace2fc1202e1e5288be14,RJ,relogios_presentes,146.0,15.77,-15.0,5.0,0
 312a57661e067d44df1a3aa93b583a36,RS,telefonia,49.99,15.1,-22.0,1.0,0
 35d67b8fff86c1b281f87c1d454fe49a,MG,casa_conforto,269.0,22.72,-8.0,5.0,0
-378d1ac3d8e22dd46990757398ae8500,SP,alimentos_bebidas,29.99,12.87,0.0,4.0,0
+378d1ac3d8e22dd46990757398ae8500,SP,alimentos_bebidas,29.99,12.87,0.0,4.0,1
 38006c12e16c03c74e2eb3113e238e5f,SP,eletrodomesticos,10.0,7.87,-7.0,5.0,0
 3a28b975c176565c52fc1af2b84197cf,SP,cama_mesa_banho,119.9,13.86,-11.0,5.0,0
 3b2285d4d80f742f34cc959e041722a9,DF,casa_conforto,86.9,2.1,-16.0,4.0,0
