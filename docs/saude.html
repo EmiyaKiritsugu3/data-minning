@@ -8285,10 +8285,12 @@ prevalência real ≈ 0,14, então acurácia/PPV/NPV são medidos em prevalênci
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 <span class="n">n0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 <span class="n">n1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_antes"</span><span class="p">:</span> <span class="p">[</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">],</span>
-                    <span class="s2">"n_undersampling_só_treino"</span><span class="p">:</span> <span class="p">[</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span><span class="p">]})</span>
+<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_base"</span><span class="p">:</span> <span class="p">[</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">],</span>
+                    <span class="s2">"nota"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"majoritária: subamostrada à minoria só no treino (§5)"</span><span class="p">,</span>
+                             <span class="s2">"minoritária: integral no treino; contagens exatas em §5"</span><span class="p">]})</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">bal</span><span class="p">)))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5)."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5),"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas impressas em §5."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8313,20 +8315,20 @@ prevalência real ≈ 0,14, então acurácia/PPV/NPV são medidos em prevalênci
 <thead>
 <tr style="text-align: right;">
 <th>classe</th>
-<th>n_antes</th>
-<th>n_undersampling_só_treino</th>
+<th>n_base</th>
+<th>nota</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0</td>
 <td>218334</td>
-<td>35346</td>
+<td>majoritária: subamostrada à minoria só no treino (§5)</td>
 </tr>
 <tr>
 <td>1</td>
 <td>35346</td>
-<td>35346</td>
+<td>minoritária: integral no treino; contagens exatas em §5</td>
 </tr>
 </tbody>
 </table>
@@ -8335,7 +8337,8 @@ prevalência real ≈ 0,14, então acurácia/PPV/NPV são medidos em prevalênci
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5).
+<pre>EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5),
+onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas impressas em §5.
 </pre>
 </div>
 </div>
@@ -8716,8 +8719,8 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"prevalência holdout: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> (esperado ≈ 0.139)"</span><span class="p">)</span>
-<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.139</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.02</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"prevalência holdout: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> (base: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mf">0.02</span>
 </pre></div>
 </div>
 </div>
@@ -8730,7 +8733,7 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>prevalência holdout: 0.1393 (esperado ≈ 0.139)
+<pre>prevalência holdout: 0.1393 (base: 0.1393)
 </pre>
 </div>
 </div>
@@ -8816,13 +8819,6 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <td>1.754</td>
 </tr>
 <tr>
-<td>frozenset({'HighBP'})</td>
-<td>frozenset({'DiffWalk'})</td>
-<td>0.114</td>
-<td>0.265</td>
-<td>1.574</td>
-</tr>
-<tr>
 <td>frozenset({'DiffWalk'})</td>
 <td>frozenset({'HighBP'})</td>
 <td>0.114</td>
@@ -8830,7 +8826,14 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <td>1.574</td>
 </tr>
 <tr>
-<td>frozenset({'Smoker', 'HighChol'})</td>
+<td>frozenset({'HighBP'})</td>
+<td>frozenset({'DiffWalk'})</td>
+<td>0.114</td>
+<td>0.265</td>
+<td>1.574</td>
+</tr>
+<tr>
+<td>frozenset({'HighChol', 'Smoker'})</td>
 <td>frozenset({'HighBP'})</td>
 <td>0.134</td>
 <td>0.637</td>
@@ -8838,23 +8841,23 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 </tr>
 <tr>
 <td>frozenset({'HighBP'})</td>
-<td>frozenset({'Smoker', 'HighChol'})</td>
+<td>frozenset({'HighChol', 'Smoker'})</td>
 <td>0.134</td>
 <td>0.312</td>
 <td>1.484</td>
 </tr>
 <tr>
-<td>frozenset({'Smoker', 'HighBP'})</td>
 <td>frozenset({'HighChol'})</td>
+<td>frozenset({'HighBP', 'Smoker'})</td>
 <td>0.134</td>
-<td>0.626</td>
+<td>0.316</td>
 <td>1.476</td>
 </tr>
 <tr>
+<td>frozenset({'HighBP', 'Smoker'})</td>
 <td>frozenset({'HighChol'})</td>
-<td>frozenset({'Smoker', 'HighBP'})</td>
 <td>0.134</td>
-<td>0.316</td>
+<td>0.626</td>
 <td>1.476</td>
 </tr>
 <tr>
@@ -9213,7 +9216,6 @@ reais quando <code>data/</code> presente, sintéticas caso contrário) replica o
 <p><label>Busca global nas tabelas:
 <input type="search" id="global-table-filter" placeholder="ex: 1, 30, faixa…"></label>
 <small>Todas as tabelas ganham busca própria e ordenação por clique no cabeçalho.</small></p>
-<p>Amostra real: <a href="assets/data/sample_diabetes.csv">sample_diabetes.csv</a> (200 linhas reais, BRFSS 2015).</p>
 <h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
 <div id="chart-diab-idade" class="interactive-chart"></div>
 <div id="chart-diab-fatores" class="interactive-chart"></div>
