@@ -21,18 +21,19 @@
   </header>
   <main>
     <h2>E-commerce brasileiro (Olist): segmentação e padrões de compra</h2>
-    <p><b>Aviso — dados sintéticos ilustrativos:</b> sem credencial Kaggle neste ambiente,
-    esta análise usa dados sintéticos realistas (seed 42) com o esquema da coleção Olist;
-    os resultados são <b>ilustrativos</b>, não do dataset real. Fonte real:
-    <code>kaggle datasets download olistbr/brazilian-ecommerce</code> — com credenciais,
-    baixe os 9 CSVs para <code>data/</code> e reexecute
-    <code>notebooks/01_ecommerce.ipynb</code> para regenerar tudo com dados reais.
-    Amostra de 200 linhas em <a href="assets/data/sample_olist.csv">sample_olist.csv</a>.</p>
+    <p><b>Dados reais — Olist Brazilian E-commerce</b> (<code>olistbr/brazilian-ecommerce</code>,
+    Kaggle): 9 CSVs em <code>data/</code> (não versionados) — <b>99.441 pedidos</b>
+    (04/set/2016–17/out/2018), <b>112.650 itens</b>, <b>95.420 clientes únicos</b> no join
+    (96.096 na base de clientes),
+    27 UFs e 73 categorias. Join <code>orders ⨝ items ⨝ customers</code> (+ reviews e
+    categoria do produto) = <b>112.650 linhas</b> (98.666 pedidos com itens);
+    <code>notebooks/01_ecommerce.ipynb</code> executado de ponta a ponta com esses dados.
+    Amostra de 200 linhas reais em <a href="assets/data/sample_olist.csv">sample_olist.csv</a>.</p>
 
     <h3>1. Entendimento dos dados</h3>
     <p>A coleção Olist cobre pedidos, itens, clientes, produtos, avaliações, pagamentos,
-    vendedores, geolocalização e tradução de categorias (tabela gerada com
-    <code>df_to_html_table</code> no notebook):</p>
+    vendedores, geolocalização e tradução de categorias (dicionário + volumes reais em linhas,
+    tabelas geradas com <code>df_to_html_table</code> no notebook — 1.550.922 linhas no total):</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -80,12 +81,65 @@
   </tbody>
 </table>
 
+    <p>Volumes reais por arquivo (linhas):</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>arquivo</th>
+      <th>linhas</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>olist_orders_dataset.csv</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>olist_order_items_dataset.csv</td>
+      <td>112650</td>
+    </tr>
+    <tr>
+      <td>olist_customers_dataset.csv</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>olist_products_dataset.csv</td>
+      <td>32951</td>
+    </tr>
+    <tr>
+      <td>olist_order_reviews_dataset.csv</td>
+      <td>99224</td>
+    </tr>
+    <tr>
+      <td>olist_order_payments_dataset.csv</td>
+      <td>103886</td>
+    </tr>
+    <tr>
+      <td>olist_sellers_dataset.csv</td>
+      <td>3095</td>
+    </tr>
+    <tr>
+      <td>olist_geolocation_dataset.csv</td>
+      <td>1000163</td>
+    </tr>
+    <tr>
+      <td>product_category_name_translation.csv</td>
+      <td>71</td>
+    </tr>
+  </tbody>
+</table>
+
     <h3>2. Preparação</h3>
-    <p>Join de <code>orders + order_items + customers</code> (6000 pedidos,
-    7337 itens). Nulos de <code>order_delivered_customer_date</code> e
-    <code>order_delivered_carrier_date</code> (~3%, pedidos cancelados/indisponíveis)
-    foram sinalizados com flag e excluídos do cálculo de atraso. Outliers de
-    preço e frete (regra IQR) foram contidos com clip no percentil 99.</p>
+    <p>Join de <code>orders ⨝ order_items ⨝ customers</code> (112.650 linhas,
+    98.666 pedidos com itens, 95.420 clientes únicos) + reviews deduplicadas por pedido
+    (99.224 brutas → 98.673; 551 pedidos com &gt;1 avaliação ficam com a mais recente)
+    + categoria do produto (1,42% ausente). Nulos de
+    <code>order_delivered_customer_date</code> (2.965 pedidos, 3,0% —
+    canceled/unavailable/shipped sem entrega) foram sinalizados com a flag
+    <code>is_null_delivered</code> e excluídos do cálculo de
+    <code>delay_days = delivered_customer − estimated_delivery</code> (dias).
+    Outliers de preço (16.640 pela regra IQR) e frete (19.137) foram contidos com
+    clip no percentil 99 (R$890,00 e R$84,52). Cobertura de review: 99,2%.</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -100,110 +154,114 @@
   </thead>
   <tbody>
     <tr>
-      <td>o00000</td>
+      <td>e481f51cbdc54678b7cc49136f2d6af7</td>
       <td>SP</td>
-      <td>automotivo</td>
-      <td>96.69</td>
-      <td>17.07</td>
-      <td>-24.0</td>
-      <td>3.0</td>
-    </tr>
-    <tr>
-      <td>o00001</td>
-      <td>PR</td>
-      <td>beleza_saude</td>
-      <td>68.74</td>
-      <td>7.11</td>
-      <td>-22.0</td>
-      <td>5.0</td>
-    </tr>
-    <tr>
-      <td>o00002</td>
-      <td>PA</td>
-      <td>ferramentas_jardim</td>
-      <td>182.72</td>
-      <td>38.81</td>
-      <td>-11.0</td>
-      <td>5.0</td>
-    </tr>
-    <tr>
-      <td>o00003</td>
-      <td>RJ</td>
-      <td>ferramentas_jardim</td>
-      <td>355.98</td>
-      <td>15.59</td>
-      <td>-1.0</td>
+      <td>utilidades_domesticas</td>
+      <td>29.99</td>
+      <td>8.72</td>
+      <td>-8.0</td>
       <td>4.0</td>
     </tr>
     <tr>
-      <td>o00004</td>
-      <td>RJ</td>
-      <td>moveis_decoracao</td>
-      <td>144.87</td>
-      <td>7.70</td>
-      <td>-23.0</td>
+      <td>53cdb2fc8bc7dce0b6741e2150273451</td>
+      <td>BA</td>
+      <td>perfumaria</td>
+      <td>118.70</td>
+      <td>22.76</td>
+      <td>-6.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <td>47770eb9100c2d0c44946d9cf07ec65d</td>
+      <td>GO</td>
+      <td>automotivo</td>
+      <td>159.90</td>
+      <td>19.22</td>
+      <td>-18.0</td>
       <td>5.0</td>
     </tr>
     <tr>
-      <td>o00005</td>
-      <td>SP</td>
-      <td>utilidades_domesticas</td>
-      <td>173.77</td>
-      <td>18.45</td>
-      <td>-4.0</td>
+      <td>949d5b44dbf5de918fe9c16f97b45f8a</td>
+      <td>RN</td>
+      <td>pet_shop</td>
+      <td>45.00</td>
+      <td>27.20</td>
+      <td>-13.0</td>
       <td>5.0</td>
     </tr>
     <tr>
-      <td>o00006</td>
-      <td>SP</td>
-      <td>moveis_decoracao</td>
-      <td>109.16</td>
-      <td>15.56</td>
-      <td>-5.0</td>
-      <td>5.0</td>
-    </tr>
-    <tr>
-      <td>o00007</td>
+      <td>ad21c59c0840e6cb83a9ceb5573f8159</td>
       <td>SP</td>
       <td>papelaria</td>
-      <td>149.93</td>
-      <td>3.00</td>
-      <td>-21.0</td>
+      <td>19.90</td>
+      <td>8.72</td>
+      <td>-10.0</td>
       <td>5.0</td>
     </tr>
     <tr>
-      <td>o00007</td>
-      <td>SP</td>
-      <td>relogios_presentes</td>
-      <td>100.94</td>
-      <td>8.36</td>
-      <td>-21.0</td>
+      <td>a4591c265e18cb1dcee52889e2d8acc3</td>
+      <td>PR</td>
+      <td>automotivo</td>
+      <td>147.90</td>
+      <td>27.36</td>
+      <td>-6.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <td>136cce7faa42fdb2cefd53fdc79a6098</td>
+      <td>RS</td>
+      <td>NaN</td>
+      <td>49.90</td>
+      <td>16.05</td>
+      <td>NaN</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <td>6514b8ad8028c9f2cc2374ded245783f</td>
+      <td>RJ</td>
+      <td>automotivo</td>
+      <td>59.99</td>
+      <td>15.17</td>
+      <td>-12.0</td>
       <td>5.0</td>
     </tr>
     <tr>
-      <td>o00007</td>
+      <td>76c6e866289321a7c93b82b54852dc33</td>
+      <td>RS</td>
+      <td>moveis_decoracao</td>
+      <td>19.90</td>
+      <td>16.05</td>
+      <td>-32.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>e69bfb5eb88e0ed6a785585b27e16dbf</td>
       <td>SP</td>
-      <td>perfumaria</td>
-      <td>40.36</td>
-      <td>18.08</td>
-      <td>-21.0</td>
+      <td>moveis_escritorio</td>
+      <td>149.99</td>
+      <td>19.77</td>
+      <td>-7.0</td>
       <td>5.0</td>
     </tr>
   </tbody>
 </table>
 
     <h3>3. EDA</h3>
-    <p>O atraso médio cresce nas notas baixas de <code>review_score</code>, confirmando
-    que pontualidade dirige a satisfação. As categorias de maior receita são cama_mesa_banho, beleza_saude, esporte_lazer;
-    SP concentra a receita por UF e o frete cresce com a distância aproximada do CD (por UF).</p>
-    <figure><img src="assets/img/olist_atraso_review.png" alt="Atraso médio por review_score"><figcaption>Atraso médio por nota.</figcaption></figure>
-    <figure><img src="assets/img/olist_receita_categoria.png" alt="Receita por categoria"><figcaption>Receita por categoria (top 10).</figcaption></figure>
-    <figure><img src="assets/img/olist_receita_uf.png" alt="Receita por UF"><figcaption>Receita por UF (top 10).</figcaption></figure>
-    <figure><img src="assets/img/olist_frete_distancia.png" alt="Frete vs distância"><figcaption>Frete vs distância aproximada.</figcaption></figure>
-    <figure><img src="assets/img/olist_outliers_preco_frete.png" alt="Outliers preço e frete"><figcaption>Outliers de preço/frete antes do tratamento.</figcaption></figure>
+    <p>O atraso médio cai de −5,94 dias (nota 1) a −13,42 dias (nota 5): quem recebe antes do
+    prazo avalia melhor — e a nota média despenca de 4,29 (entrega no prazo) para 2,72
+    (1–7 dias de atraso) e 1,70 (mais de 7 dias; pedidos sem entrega: 1,76). A receita bruta
+    é de R$13.591.643,70. As categorias de maior receita são
+    beleza_saude, relogios_presentes e cama_mesa_banho; SP concentra a receita por UF;
+    o frete médio é mais alto no Norte/Nordeste (RR R$42,98) e mais baixo em SP (R$15,15) —
+    sem distância de CD nos dados reais, a figura de frete traz o frete médio por UF.</p>
+    <figure><img src="assets/img/olist_atraso_review.png" alt="Atraso médio por review_score"><figcaption>Atraso médio por nota (dados reais).</figcaption></figure>
+    <figure><img src="assets/img/olist_receita_categoria.png" alt="Receita por categoria"><figcaption>Receita por categoria (top 10, dados reais).</figcaption></figure>
+    <figure><img src="assets/img/olist_receita_uf.png" alt="Receita por UF"><figcaption>Receita por UF (top 10, dados reais).</figcaption></figure>
+    <figure><img src="assets/img/olist_frete_distancia.png" alt="Frete médio por UF"><figcaption>Frete médio por UF (substituto honesto — sem distância de CD nos dados reais).</figcaption></figure>
+    <figure><img src="assets/img/olist_outliers_preco_frete.png" alt="Outliers preço e frete"><figcaption>Outliers de preço/frete antes do tratamento (dados reais).</figcaption></figure>
 
     <h3>4. Mineração</h3>
-    <p><b>Segmentação (KMeans, k=4 sobre RFM).</b> O algoritmo KMeans agrupou os clientes
+    <p><b>Segmentação (KMeans, k=4 sobre RFM).</b> O algoritmo KMeans agrupou os 95.420 clientes
     em 4 segmentos a partir de recência, frequência e valor monetário. Perfil médio por cluster:</p>
     <table class="dataframe data-table">
   <thead>
@@ -218,38 +276,40 @@
   <tbody>
     <tr>
       <td>0</td>
-      <td>420.23</td>
-      <td>1.24</td>
-      <td>194.68</td>
-      <td>1006</td>
+      <td>133.52</td>
+      <td>1.00</td>
+      <td>113.60</td>
+      <td>51886</td>
     </tr>
     <tr>
       <td>1</td>
-      <td>151.58</td>
-      <td>2.57</td>
-      <td>476.00</td>
-      <td>837</td>
+      <td>393.69</td>
+      <td>1.00</td>
+      <td>114.48</td>
+      <td>38378</td>
     </tr>
     <tr>
       <td>2</td>
-      <td>121.42</td>
-      <td>3.75</td>
-      <td>972.69</td>
-      <td>295</td>
+      <td>226.18</td>
+      <td>2.11</td>
+      <td>243.05</td>
+      <td>2883</td>
     </tr>
     <tr>
       <td>3</td>
-      <td>132.18</td>
-      <td>1.39</td>
-      <td>160.83</td>
-      <td>1076</td>
+      <td>244.35</td>
+      <td>1.01</td>
+      <td>1145.31</td>
+      <td>2273</td>
     </tr>
   </tbody>
 </table>
     <figure><img src="assets/img/olist_clusters_rfm.png" alt="Clusters KMeans em RFM"><figcaption>Segmentos KMeans (recência × monetário).</figcaption></figure>
     <p><b>Classificação (árvore de decisão).</b> A árvore prevê <code>review_score &gt;= 4</code>
-    a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
-    (atributos mais importantes: price, freight_value, freight_ratio). A matriz de confusão no teste (acurácia 0.80):</p>
+    (77,1% da base) a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
+    (atributos mais importantes: freight_ratio 0,26, delay_fill 0,25, freight_c 0,19,
+    price_c 0,19; split por pedido via GroupShuffleSplit, 0 pedidos vazados treino/teste).
+    A matriz de confusão no teste (acurácia 0,69):</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -261,18 +321,18 @@
   <tbody>
     <tr>
       <th>real 0 (&lt;=3)</th>
-      <td>42</td>
-      <td>198</td>
+      <td>3325</td>
+      <td>5050</td>
     </tr>
     <tr>
       <th>real 1 (&gt;=4)</th>
-      <td>235</td>
-      <td>1656</td>
+      <td>5392</td>
+      <td>19766</td>
     </tr>
   </tbody>
 </table>
     <figure><img src="assets/img/olist_matriz_confusao.png" alt="Matriz de confusão"><figcaption>Matriz de confusão da árvore (confusion_matrix via confusion_summary).</figcaption></figure>
-    <p><b>Associação.</b> Co-ocorrência de categorias em pedidos com 2+ itens (top pares):</p>
+    <p><b>Associação.</b> Co-ocorrência de categorias em 727 pedidos com 2+ categorias distintas (top pares):</p>
     <table class="dataframe data-table">
   <thead>
     <tr style="text-align: right;">
@@ -283,88 +343,95 @@
   </thead>
   <tbody>
     <tr>
-      <td>beleza_saude</td>
-      <td>cama_mesa_banho</td>
-      <td>42</td>
-    </tr>
-    <tr>
-      <td>cama_mesa_banho</td>
-      <td>relogios_presentes</td>
-      <td>37</td>
-    </tr>
-    <tr>
-      <td>beleza_saude</td>
-      <td>esporte_lazer</td>
-      <td>36</td>
-    </tr>
-    <tr>
-      <td>cama_mesa_banho</td>
-      <td>utilidades_domesticas</td>
-      <td>33</td>
-    </tr>
-    <tr>
-      <td>cama_mesa_banho</td>
-      <td>esporte_lazer</td>
-      <td>32</td>
-    </tr>
-    <tr>
-      <td>cama_mesa_banho</td>
-      <td>informatica_acessorios</td>
-      <td>31</td>
-    </tr>
-    <tr>
       <td>cama_mesa_banho</td>
       <td>moveis_decoracao</td>
-      <td>29</td>
+      <td>70</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>casa_conforto</td>
+      <td>43</td>
+    </tr>
+    <tr>
+      <td>moveis_decoracao</td>
+      <td>utilidades_domesticas</td>
+      <td>24</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>utilidades_domesticas</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>bebes</td>
+      <td>cool_stuff</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>bebes</td>
+      <td>brinquedos</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>ferramentas_jardim</td>
+      <td>moveis_decoracao</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <td>bebes</td>
+      <td>cama_mesa_banho</td>
+      <td>17</td>
     </tr>
     <tr>
       <td>beleza_saude</td>
-      <td>utilidades_domesticas</td>
-      <td>28</td>
-    </tr>
-    <tr>
       <td>esporte_lazer</td>
-      <td>utilidades_domesticas</td>
-      <td>27</td>
+      <td>14</td>
     </tr>
     <tr>
-      <td>beleza_saude</td>
-      <td>telefonia</td>
-      <td>27</td>
+      <td>casa_construcao</td>
+      <td>moveis_decoracao</td>
+      <td>13</td>
     </tr>
   </tbody>
 </table>
 
-    <h3>Painel interativo — explore, visualize, simule</h3>
+    <h3>5. Apoio à decisão — recomendações</h3>
+    <ul>
+      <li><b>Recomenda-se blindar o SLA de entrega no Sudeste:</b> se a nota média despenca de
+      4,29 (no prazo) para 2,72 (1–7 dias de atraso) e 1,70 (mais de 7 dias; sem entrega: 1,76),
+      então priorizar
+      estoque regional nas UFs de maior receita (SP/RJ/MG) reduz o atraso e protege o review.</li>
+      <li><b>Recomenda-se fidelizar os clusters de alto valor:</b> se o KMeans isola 2.273 clientes
+      de alto valor (gasto médio ~R$1.145) e 2.883 recorrentes (freq. 2,11), então oferecer frete
+      grátis progressivo a esses segmentos aumenta a recompra.</li>
+      <li><b>Recomenda-se rever a tabela de frete do Norte/Nordeste:</b> se razão frete/preço (26%)
+      e atraso (delay_fill, 25%) lideram a árvore (acurácia 0,69, split por pedido sem vazamento)
+      e o frete médio em RR (R$42,98)
+      é ~3× o de SP (R$15,15), então subsidiar ou compartilhar o frete de longa distância
+      preserva a satisfação.</li>
+      <li><b>Recomenda-se bundle das categorias co-ocorrentes:</b> se
+      cama_mesa_banho + moveis_decoracao aparecem juntos em 70 pedidos (top par),
+      então criar kits casa com desconto eleva o ticket médio.</li>
+    </ul>
+  <section>
+<h2>Painel interativo — explore, visualize, simule</h2>
     <p><label>Busca global nas tabelas:
     <input type="search" id="global-table-filter" placeholder="ex: SP, cama_mesa_banho, 5.0…"></label>
     <small>Todas as tabelas da página também ganham busca própria e ordenação por clique no cabeçalho.</small></p>
-    <h4>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h4>
+    <h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
     <div id="chart-olist-cat" class="interactive-chart"></div>
     <div id="chart-olist-uf" class="interactive-chart"></div>
     <div id="chart-olist-atraso" class="interactive-chart"></div>
     <div class="sim-box" id="sim-atraso">
-      <h4>Simulador SAD — tolerância ao atraso</h4>
+      <h3>Simulador SAD — tolerância ao atraso</h3>
       <p>E se a operação tolerar no máximo <output id="sim-atraso-val">7</output> dias de atraso?</p>
       <input type="range" min="0" max="30" step="1" value="7"
              oninput="document.getElementById('sim-atraso-val').textContent = this.value"
              aria-label="Atraso máximo tolerado em dias">
       <p class="sim-result">Carregando…</p>
     </div>
-
-    <h3>5. Apoio à decisão — recomendações</h3>
-    <ul>
-      <li><b>Recomenda-se reforçar o CD do Sudeste:</b> se o atraso &gt; 7 dias derruba a nota,
-      então priorizar estoque regional nas UFs de maior receita reduz o atraso e protege o review.</li>
-      <li><b>Recomenda-se fidelizar o cluster de alto valor:</b> se o KMeans isola clientes de
-      alta frequência/monetário, então oferecer frete grátis progressivo a esse segmento
-      aumenta a recompra.</li>
-      <li><b>Recomenda-se rever a tabela de frete de longa distância:</b> se frete/preço alto
-      prediz nota baixa na árvore, então subsidiar o frete acima de 1500 km preserva a satisfação.</li>
-      <li><b>Recomenda-se bundle das categorias co-ocorrentes:</b> se pares de categorias
-      aparecem juntos com frequência, então criar kits com desconto eleva o ticket médio.</li>
-    </ul>
-  </main>
+</section>
+</main>
   <footer>
     <p>Disciplina SAD — Mineração de Dados. Dados brutos (Kaggle) não versionados; ver README.</p>
   </footer>

@@ -17,22 +17,24 @@ SCRIPTS = """  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></sc
   <script src="assets/js/simulators.js" defer></script>"""
 
 PANELS = {
-    "ecommerce.html": """    <h3>Painel interativo — explore, visualize, simule</h3>
+    "ecommerce.html": """<section>
+<h2>Painel interativo — explore, visualize, simule</h2>
     <p><label>Busca global nas tabelas:
     <input type="search" id="global-table-filter" placeholder="ex: SP, cama_mesa_banho, 5.0…"></label>
     <small>Todas as tabelas da página também ganham busca própria e ordenação por clique no cabeçalho.</small></p>
-    <h4>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h4>
+    <h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
     <div id="chart-olist-cat" class="interactive-chart"></div>
     <div id="chart-olist-uf" class="interactive-chart"></div>
     <div id="chart-olist-atraso" class="interactive-chart"></div>
     <div class="sim-box" id="sim-atraso">
-      <h4>Simulador SAD — tolerância ao atraso</h4>
+      <h3>Simulador SAD — tolerância ao atraso</h3>
       <p>E se a operação tolerar no máximo <output id="sim-atraso-val">7</output> dias de atraso?</p>
       <input type="range" min="0" max="30" step="1" value="7"
              oninput="document.getElementById('sim-atraso-val').textContent = this.value"
              aria-label="Atraso máximo tolerado em dias">
       <p class="sim-result">Carregando…</p>
     </div>
+</section>
 """,
     "saude.html": """<section>
 <h2>Painel interativo — explore, visualize, simule</h2>
@@ -87,11 +89,21 @@ def main():
         text = p.read_text(encoding="utf-8")
         changed = False
         if MARKERS[page] not in text:
-            assert text.count("</main>") == 1, f"</main> inesperado em {page}"
+            n = text.count("</main>")
+            if n != 1:
+                raise SystemExit(
+                    f"{page}: esperado 1 </main>, achado {n} — "
+                    "rode o export do nbconvert de novo?"
+                )
             text = text.replace("</main>", panel + "</main>", 1)
             changed = True
         if "cdn.plot.ly" not in text:
-            assert text.count("</body>") == 1, f"</body> inesperado em {page}"
+            n = text.count("</body>")
+            if n != 1:
+                raise SystemExit(
+                    f"{page}: esperado 1 </body>, achado {n} — "
+                    "rode o export do nbconvert de novo?"
+                )
             text = text.replace("</body>", SCRIPTS + "\n</body>", 1)
             changed = True
         if changed:

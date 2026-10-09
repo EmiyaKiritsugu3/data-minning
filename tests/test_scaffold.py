@@ -18,3 +18,23 @@ def test_common_signatures():
 def test_data_gitignored():
     lines = {ln.strip() for ln in Path(".gitignore").read_text().splitlines()}
     assert lines & {"data/", "/data/"}, ".gitignore deve ignorar a pasta data/ da raiz"
+
+
+def test_save_fig_contract():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    import src.common as c
+
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    name = "test_contract_tmp.png"
+    url = c.save_fig(fig, name)
+    plt.close(fig)
+    try:
+        assert url == f"assets/img/{name}", url
+        assert (Path("docs") / url).exists(), url
+    finally:
+        (Path("docs") / url).unlink(missing_ok=True)

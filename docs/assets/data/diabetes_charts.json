@@ -1,88 +1,88 @@
 {
- "fonte": "amostra sample_diabetes.csv (200 linhas, dados sintéticos ilustrativos)",
+ "fonte": "amostra sample_diabetes.csv (200 linhas, dados reais BRFSS 2015)",
  "prevalencia_por_idade": [
   {
    "faixa_etaria": 1,
    "prevalencia": 0.0,
-   "n": 7
+   "n": 6
   },
   {
    "faixa_etaria": 2,
-   "prevalencia": 0.118,
-   "n": 17
+   "prevalencia": 0.0,
+   "n": 7
   },
   {
    "faixa_etaria": 3,
+   "prevalencia": 0.0,
+   "n": 8
+  },
+  {
+   "faixa_etaria": 4,
+   "prevalencia": 0.0,
+   "n": 16
+  },
+  {
+   "faixa_etaria": 5,
+   "prevalencia": 0.077,
+   "n": 13
+  },
+  {
+   "faixa_etaria": 6,
+   "prevalencia": 0.125,
+   "n": 16
+  },
+  {
+   "faixa_etaria": 7,
+   "prevalencia": 0.0,
+   "n": 23
+  },
+  {
+   "faixa_etaria": 8,
+   "prevalencia": 0.13,
+   "n": 23
+  },
+  {
+   "faixa_etaria": 9,
+   "prevalencia": 0.136,
+   "n": 22
+  },
+  {
+   "faixa_etaria": 10,
+   "prevalencia": 0.103,
+   "n": 29
+  },
+  {
+   "faixa_etaria": 11,
    "prevalencia": 0.222,
    "n": 18
   },
   {
-   "faixa_etaria": 4,
-   "prevalencia": 0.143,
-   "n": 14
-  },
-  {
-   "faixa_etaria": 5,
-   "prevalencia": 0.05,
-   "n": 20
-  },
-  {
-   "faixa_etaria": 6,
-   "prevalencia": 0.3,
-   "n": 10
-  },
-  {
-   "faixa_etaria": 7,
-   "prevalencia": 0.133,
-   "n": 15
-  },
-  {
-   "faixa_etaria": 8,
-   "prevalencia": 0.111,
-   "n": 18
-  },
-  {
-   "faixa_etaria": 9,
-   "prevalencia": 0.308,
-   "n": 13
-  },
-  {
-   "faixa_etaria": 10,
-   "prevalencia": 0.316,
-   "n": 19
-  },
-  {
-   "faixa_etaria": 11,
-   "prevalencia": 0.286,
-   "n": 14
-  },
-  {
    "faixa_etaria": 12,
-   "prevalencia": 0.286,
-   "n": 14
+   "prevalencia": 0.167,
+   "n": 12
   },
   {
    "faixa_etaria": 13,
-   "prevalencia": 0.476,
-   "n": 21
+   "prevalencia": 0.0,
+   "n": 7
   }
  ],
  "fatores": {
   "HighBP": {
-   "com_fator": 0.324,
-   "sem_fator": 0.112
+   "com_fator": 0.16,
+   "sem_fator": 0.042
   },
   "HighChol": {
-   "com_fator": 0.325,
-   "sem_fator": 0.15
+   "com_fator": 0.16,
+   "sem_fator": 0.042
   },
   "Smoker": {
-   "com_fator": 0.276,
-   "sem_fator": 0.167
+   "com_fator": 0.092,
+   "sem_fator": 0.088
   },
   "PhysActivity": {
-   "com_fator": 0.159,
-   "sem_fator": 0.324
+   "com_fator": 0.082,
+   "sem_fator": 0.113
   }
  }
 }

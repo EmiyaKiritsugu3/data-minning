@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="pt-BR">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Saúde (Diabetes) — Mineração de Dados</title>
+<title>Saúde (Diabetes) — Mineração de Dados</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7292,7 +7292,7 @@ a.anchor-link {
 }
 </style>
 <!-- Load mathjax -->
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
 <!-- MathJax configuration -->
 <script type="text/x-mathjax-config">
     init_mathjax = function() {
@@ -7325,7 +7325,425 @@ a.anchor-link {
     }
     init_mathjax();
     </script>
-<!-- End of mathjax configuration -->
+<!-- End of mathjax configuration --><script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
+    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
+    if(elkUrl) {
+      const elkLayouts = (await import(elkUrl)).default;
+      mermaid.registerLayoutLoaders(elkLayouts);
+    }
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+      return `${SVG_XML_HEADER}${svg}`;
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+
+  /**
+   * Named HTML entities with their decimal equivalent codes.
+   *
+   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
+   * */
+  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
+<!ENTITY aacute "&#225;">
+<!ENTITY Acirc "&#194;">
+<!ENTITY acirc "&#226;">
+<!ENTITY acute "&#180;">
+<!ENTITY AElig "&#198;">
+<!ENTITY aelig "&#230;">
+<!ENTITY Agrave "&#192;">
+<!ENTITY agrave "&#224;">
+<!ENTITY alefsym "&#8501;">
+<!ENTITY Alpha "&#913;">
+<!ENTITY alpha "&#945;">
+<!ENTITY amp "&#38;">
+<!ENTITY and "&#8869;">
+<!ENTITY ang "&#8736;">
+<!ENTITY Aring "&#197;">
+<!ENTITY aring "&#229;">
+<!ENTITY asymp "&#8776;">
+<!ENTITY Atilde "&#195;">
+<!ENTITY atilde "&#227;">
+<!ENTITY Auml "&#196;">
+<!ENTITY auml "&#228;">
+<!ENTITY bdquo "&#8222;">
+<!ENTITY Beta "&#914;">
+<!ENTITY beta "&#946;">
+<!ENTITY brvbar "&#166;">
+<!ENTITY bull "&#8226;">
+<!ENTITY cap "&#8745;">
+<!ENTITY Ccedil "&#199;">
+<!ENTITY ccedil "&#231;">
+<!ENTITY cedil "&#184;">
+<!ENTITY cent "&#162;">
+<!ENTITY Chi "&#935;">
+<!ENTITY chi "&#967;">
+<!ENTITY circ "&#710;">
+<!ENTITY clubs "&#9827;">
+<!ENTITY cong "&#8773;">
+<!ENTITY copy "&#169;">
+<!ENTITY crarr "&#8629;">
+<!ENTITY cup "&#8746;">
+<!ENTITY curren "&#164;">
+<!ENTITY dagger "&#8224;">
+<!ENTITY Dagger "&#8225;">
+<!ENTITY darr "&#8595;">
+<!ENTITY dArr "&#8659;">
+<!ENTITY deg "&#176;">
+<!ENTITY Delta "&#916;">
+<!ENTITY delta "&#948;">
+<!ENTITY diams "&#9830;">
+<!ENTITY divide "&#247;">
+<!ENTITY Eacute "&#201;">
+<!ENTITY eacute "&#233;">
+<!ENTITY Ecirc "&#202;">
+<!ENTITY ecirc "&#234;">
+<!ENTITY Egrave "&#200;">
+<!ENTITY egrave "&#232;">
+<!ENTITY empty "&#8709;">
+<!ENTITY emsp "&#8195;">
+<!ENTITY ensp "&#8194;">
+<!ENTITY epsilon "&#949;">
+<!ENTITY Epsilon "&#917;">
+<!ENTITY equiv "&#8801;">
+<!ENTITY Eta "&#919;">
+<!ENTITY eta "&#951;">
+<!ENTITY ETH "&#208;">
+<!ENTITY eth "&#240;">
+<!ENTITY Euml "&#203;">
+<!ENTITY euml "&#235;">
+<!ENTITY exist "&#8707;">
+<!ENTITY fnof "&#402;">
+<!ENTITY forall "&#8704;">
+<!ENTITY frac12 "&#189;">
+<!ENTITY frac14 "&#188;">
+<!ENTITY frac34 "&#190;">
+<!ENTITY frasl "&#8260;">
+<!ENTITY Gamma "&#915;">
+<!ENTITY gamma "&#947;">
+<!ENTITY ge "&#8805;">
+<!ENTITY gt "&#62;">
+<!ENTITY harr "&#8596;">
+<!ENTITY hArr "&#8660;">
+<!ENTITY hearts "&#9829;">
+<!ENTITY hellip "&#8230;">
+<!ENTITY Iacute "&#205;">
+<!ENTITY iacute "&#237;">
+<!ENTITY Icirc "&#206;">
+<!ENTITY icirc "&#238;">
+<!ENTITY iexcl "&#161;">
+<!ENTITY Igrave "&#204;">
+<!ENTITY igrave "&#236;">
+<!ENTITY image "&#8465;">
+<!ENTITY infin "&#8734;">
+<!ENTITY int "&#8747;">
+<!ENTITY Iota "&#921;">
+<!ENTITY iota "&#953;">
+<!ENTITY iquest "&#191;">
+<!ENTITY isin "&#8712;">
+<!ENTITY Iuml "&#207;">
+<!ENTITY iuml "&#239;">
+<!ENTITY Kappa "&#922;">
+<!ENTITY kappa "&#954;">
+<!ENTITY Lambda "&#923;">
+<!ENTITY lambda "&#955;">
+<!ENTITY lang "&#9001;">
+<!ENTITY laquo "&#171;">
+<!ENTITY larr "&#8592;">
+<!ENTITY lArr "&#8656;">
+<!ENTITY lceil "&#8968;">
+<!ENTITY ldquo "&#8220;">
+<!ENTITY le "&#8804;">
+<!ENTITY lfloor "&#8970;">
+<!ENTITY lowast "&#8727;">
+<!ENTITY loz "&#9674;">
+<!ENTITY lrm "&#8206;">
+<!ENTITY lsaquo "&#8249;">
+<!ENTITY lsquo "&#8216;">
+<!ENTITY lt "&#60;">
+<!ENTITY macr "&#175;">
+<!ENTITY mdash "&#8212;">
+<!ENTITY micro "&#181;">
+<!ENTITY middot "&#183;">
+<!ENTITY minus "&#8722;">
+<!ENTITY Mu "&#924;">
+<!ENTITY mu "&#956;">
+<!ENTITY nabla "&#8711;">
+<!ENTITY nbsp "&#160;">
+<!ENTITY ndash "&#8211;">
+<!ENTITY ne "&#8800;">
+<!ENTITY ni "&#8715;">
+<!ENTITY not "&#172;">
+<!ENTITY notin "&#8713;">
+<!ENTITY nsub "&#8836;">
+<!ENTITY Ntilde "&#209;">
+<!ENTITY ntilde "&#241;">
+<!ENTITY Nu "&#925;">
+<!ENTITY nu "&#957;">
+<!ENTITY Oacute "&#211;">
+<!ENTITY oacute "&#243;">
+<!ENTITY Ocirc "&#212;">
+<!ENTITY ocirc "&#244;">
+<!ENTITY OElig "&#338;">
+<!ENTITY oelig "&#339;">
+<!ENTITY Ograve "&#210;">
+<!ENTITY ograve "&#242;">
+<!ENTITY oline "&#8254;">
+<!ENTITY Omega "&#937;">
+<!ENTITY omega "&#969;">
+<!ENTITY Omicron "&#927;">
+<!ENTITY omicron "&#959;">
+<!ENTITY oplus "&#8853;">
+<!ENTITY or "&#8870;">
+<!ENTITY ordf "&#170;">
+<!ENTITY ordm "&#186;">
+<!ENTITY Oslash "&#216;">
+<!ENTITY oslash "&#248;">
+<!ENTITY Otilde "&#213;">
+<!ENTITY otilde "&#245;">
+<!ENTITY otimes "&#8855;">
+<!ENTITY Ouml "&#214;">
+<!ENTITY ouml "&#246;">
+<!ENTITY para "&#182;">
+<!ENTITY part "&#8706;">
+<!ENTITY permil "&#8240;">
+<!ENTITY perp "&#8869;">
+<!ENTITY Phi "&#934;">
+<!ENTITY phi "&#966;">
+<!ENTITY Pi "&#928;">
+<!ENTITY pi "&#960;">
+<!ENTITY piv "&#982;">
+<!ENTITY plusmn "&#177;">
+<!ENTITY pound "&#163;">
+<!ENTITY prime "&#8242;">
+<!ENTITY Prime "&#8243;">
+<!ENTITY prod "&#8719;">
+<!ENTITY prop "&#8733;">
+<!ENTITY Psi "&#936;">
+<!ENTITY psi "&#968;">
+<!ENTITY quot "&#34;">
+<!ENTITY radic "&#8730;">
+<!ENTITY rang "&#9002;">
+<!ENTITY raquo "&#187;">
+<!ENTITY rarr "&#8594;">
+<!ENTITY rArr "&#8658;">
+<!ENTITY rceil "&#8969;">
+<!ENTITY rdquo "&#8221;">
+<!ENTITY real "&#8476;">
+<!ENTITY reg "&#174;">
+<!ENTITY rfloor "&#8971;">
+<!ENTITY Rho "&#929;">
+<!ENTITY rho "&#961;">
+<!ENTITY rlm "&#8207;">
+<!ENTITY rsaquo "&#8250;">
+<!ENTITY rsquo "&#8217;">
+<!ENTITY sbquo "&#8218;">
+<!ENTITY Scaron "&#352;">
+<!ENTITY scaron "&#353;">
+<!ENTITY sdot "&#8901;">
+<!ENTITY sect "&#167;">
+<!ENTITY shy "&#173;">
+<!ENTITY Sigma "&#931;">
+<!ENTITY sigma "&#963;">
+<!ENTITY sigmaf "&#962;">
+<!ENTITY sim "&#8764;">
+<!ENTITY spades "&#9824;">
+<!ENTITY sub "&#8834;">
+<!ENTITY sube "&#8838;">
+<!ENTITY sum "&#8721;">
+<!ENTITY sup "&#8835;">
+<!ENTITY sup1 "&#185;">
+<!ENTITY sup2 "&#178;">
+<!ENTITY sup3 "&#179;">
+<!ENTITY supe "&#8839;">
+<!ENTITY szlig "&#223;">
+<!ENTITY Tau "&#932;">
+<!ENTITY tau "&#964;">
+<!ENTITY there4 "&#8756;">
+<!ENTITY Theta "&#920;">
+<!ENTITY theta "&#952;">
+<!ENTITY thetasym "&#977;">
+<!ENTITY thinsp "&#8201;">
+<!ENTITY THORN "&#222;">
+<!ENTITY thorn "&#254;">
+<!ENTITY tilde "&#732;">
+<!ENTITY times "&#215;">
+<!ENTITY trade "&#8482;">
+<!ENTITY Uacute "&#218;">
+<!ENTITY uacute "&#250;">
+<!ENTITY uarr "&#8593;">
+<!ENTITY uArr "&#8657;">
+<!ENTITY Ucirc "&#219;">
+<!ENTITY ucirc "&#251;">
+<!ENTITY Ugrave "&#217;">
+<!ENTITY ugrave "&#249;">
+<!ENTITY uml "&#168;">
+<!ENTITY upsih "&#978;">
+<!ENTITY Upsilon "&#933;">
+<!ENTITY upsilon "&#965;">
+<!ENTITY Uuml "&#220;">
+<!ENTITY uuml "&#252;">
+<!ENTITY weierp "&#8472;">
+<!ENTITY Xi "&#926;">
+<!ENTITY xi "&#958;">
+<!ENTITY Yacute "&#221;">
+<!ENTITY yacute "&#253;">
+<!ENTITY yen "&#165;">
+<!ENTITY Yuml "&#376;">
+<!ENTITY yuml "&#255;">
+<!ENTITY Zeta "&#918;">
+<!ENTITY zeta "&#950;">
+<!ENTITY zwj "&#8205;">
+<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
+
+  /**
+   * A reasonably strict xml declaration.
+   */
+  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
+
+  /**
+   * The beginning of the XML doctype declaration.
+   */
+  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
+
+  /**
+   * The end of the XML docype declaration.
+   */
+  const DOCTYPE_END = ']>';
+
+  /**
+   * A full header for an SVG XML document.
+   */
+  const SVG_XML_HEADER = `${XML_DECL}
+    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
 <style>
   .jp-Mermaid:not(.jp-RenderedMermaid) {
     display: none;
@@ -7375,9 +7793,21 @@ a.anchor-link {
     white-space: normal;
   }
 </style>
-<!-- End of mermaid configuration --><link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light"><header><h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1><nav><ul><li><a href="index.html">Início</a></li><li><a href="ecommerce.html">E-commerce (Olist)</a></li><li><a href="saude.html">Saúde (Diabetes)</a></li><li><a href="fraude.html">Fraude (Cartão de Crédito)</a></li><li><a href="relatorio.html">Relatório</a></li></ul></nav></header>
+<!-- End of mermaid configuration -->
+  <link rel="stylesheet" href="assets/css/style.css"></head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+  <header>
+    <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="ecommerce.html">E-commerce (Olist)</a></li>
+        <li><a href="saude.html">Saúde (Diabetes)</a></li>
+        <li><a href="fraude.html">Fraude (Cartão de Crédito)</a></li>
+        <li><a href="relatorio.html">Relatório</a></li>
+      </ul>
+    </nav>
+  </header>
 <main>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3e0e3dd7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -7390,10 +7820,13 @@ Comando real para baixar os dados (requer conta Kaggle + <code>kaggle.json</code
 <div class="highlight"><pre><span></span>kaggle<span class="w"> </span>datasets<span class="w"> </span>download<span class="w"> </span>alexteboul/diabetes-health-indicators-dataset<span class="w"> </span>-p<span class="w"> </span>data<span class="w"> </span>--unzip
 </pre></div>
 <blockquote>
-<p>Sem credencial/rede este notebook usa um <strong>fallback sintético realista</strong> (seed 42, n=5000,
-mesmas colunas do dataset original) para que figuras, HTML e testes sejam gerados offline.
-As relações foram calibradas para reproduzir os padrões conhecidos:
-pressão alta, colesterol alto, IMC e idade elevam o risco; atividade física protege.</p>
+<p><strong>Dados reais:</strong> <code>data/diabetes_binary_health_indicators_BRFSS2015.csv</code>
+(BRFSS 2015 original desbalanceado — n=253.680, prevalência ≈ 0,14).
+EDA, KMeans e Apriori rodam na prevalência real; só a árvore usa undersampling
+balanceado só no treino (documentado na §2) — o teste mantém a prevalência
+real ≈ 0,14 (métrica em teste balanceado seria otimista). O fallback sintético
+(seed 42, n=5000, 20 colunas — sem Education/Income, fallback aproximado)
+permanece apenas como último recurso se <code>data/</code> estiver ausente.</p>
 </blockquote>
 <p>Blocos: entendimento → preparação (balanceamento documentado, encoding binário) → EDA →
 mineração (KMeans k=3, árvore de decisão + matriz de confusão, Apriori) → decisão (regra de triagem + prevenções).</p>
@@ -7463,19 +7896,24 @@ dificuldade de locomoção (<code>DiffWalk</code>), sexo e hábitos.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">CANDIDATES</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"../data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv"</span><span class="p">,</span>
-    <span class="s2">"../data/diabetes_binary_health_indicators_BRFSS2015.csv"</span><span class="p">,</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Original desbalanceado primeiro (prevalência real ~0,14); 5050split só como alternativa.</span>
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"data"</span>
+<span class="n">CANDIDATES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"diabetes_binary_health_indicators_BRFSS2015.csv"</span><span class="p">),</span>
+    <span class="nb">str</span><span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"diabetes_binary_5050split_health_indicators_BRFSS2015.csv"</span><span class="p">),</span>
 <span class="p">]</span>
 <span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">is_real</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">CANDIDATES</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">load_csv</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"Carregado:"</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">is_real</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">break</span>
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
         <span class="k">continue</span>
 <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Sem data/ local -&gt; fallback SINTÉTICO realista (seed 42, n=5000)."</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Comando real: kaggle datasets download alexteboul/diabetes-health-indicators-dataset -p data --unzip"</span><span class="p">)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="mi">5000</span>
@@ -7514,6 +7952,7 @@ dificuldade de locomoção (<code>DiffWalk</code>), sexo e hábitos.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"shape:"</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"prevalência:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">'Diabetes_binary'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"is_real:"</span><span class="p">,</span> <span class="n">is_real</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7526,10 +7965,9 @@ dificuldade de locomoção (<code>DiffWalk</code>), sexo e hábitos.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Sem data/ local -&gt; fallback SINTÉTICO realista (seed 42, n=5000).
-Comando real: kaggle datasets download alexteboul/diabetes-health-indicators-dataset -p data --unzip
-shape: (5000, 20)
-prevalência: 0.2104
+<pre>Carregado: ../data/diabetes_binary_health_indicators_BRFSS2015.csv
+shape: (253680, 22)
+prevalência: 0.1393
 </pre>
 </div>
 </div>
@@ -7559,231 +7997,260 @@ prevalência: 0.2104
 <th>DiffWalk</th>
 <th>Sex</th>
 <th>Age</th>
+<th>Education</th>
+<th>Income</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>34.1</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>3</td>
-<td>3</td>
-<td>6</td>
-<td>0</td>
-<td>1</td>
-<td>2</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>40.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>5.0</td>
+<td>18.0</td>
+<td>15.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>9.0</td>
+<td>4.0</td>
+<td>3.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>23.3</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>11</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>25.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>7.0</td>
+<td>6.0</td>
+<td>1.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>19.4</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>2</td>
-<td>3</td>
-<td>1</td>
-<td>0</td>
-<td>9</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>28.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>5.0</td>
+<td>30.0</td>
+<td>30.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>9.0</td>
+<td>4.0</td>
+<td>8.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>34.6</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>8</td>
-<td>3</td>
-<td>0</td>
-<td>0</td>
-<td>6</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>27.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>11.0</td>
+<td>3.0</td>
+<td>6.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>33.4</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>4</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>6</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>24.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>11.0</td>
+<td>5.0</td>
+<td>4.0</td>
 </tr>
 <tr>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>28.8</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>2</td>
-<td>3</td>
-<td>4</td>
-<td>0</td>
-<td>1</td>
-<td>12</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>25.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>10.0</td>
+<td>6.0</td>
+<td>8.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>25.8</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>5</td>
-<td>6</td>
-<td>19</td>
-<td>1</td>
-<td>1</td>
-<td>2</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>30.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>14.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>9.0</td>
+<td>6.0</td>
+<td>7.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>19.2</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>2</td>
-<td>3</td>
-<td>3</td>
-<td>0</td>
-<td>0</td>
-<td>10</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>25.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>11.0</td>
+<td>4.0</td>
+<td>4.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>33.2</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>5</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>3</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>30.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>5.0</td>
+<td>30.0</td>
+<td>30.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>9.0</td>
+<td>5.0</td>
+<td>1.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>35.1</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>4</td>
-<td>1</td>
-<td>0</td>
-<td>2</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>24.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>8.0</td>
+<td>4.0</td>
+<td>3.0</td>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>is_real: True
+</pre>
 </div>
 </div>
 </div>
@@ -7798,9 +8265,10 @@ prevalência: 0.2104
 <h2 id="2.-Prepara%C3%A7%C3%A3o-%E2%80%94-balanceamento-documentado-e-encoding-bin%C3%A1rio">2. Preparação — balanceamento documentado e encoding binário<a class="anchor-link" href="#2.-Prepara%C3%A7%C3%A3o-%E2%80%94-balanceamento-documentado-e-encoding-bin%C3%A1rio">¶</a></h2><ul>
 <li><strong>Encoding:</strong> o dataset original já é binário (0/1) nas colunas indicadoras; <code>GenHlth</code> (1–5),
 <code>Age</code> (1–13) e contagens de dias são mantidos como ordinais/numéricos — nenhum one-hot necessário.</li>
-<li><strong>Balanceamento (documentado):</strong> a prevalência é minoritária (~15–20%), então a árvore é treinada
-em amostra <strong>balanceada por undersampling aleatório da classe majoritária</strong> (seed 42).
-KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o classificador usa a base balanceada.</li>
+<li><strong>Balanceamento (documentado):</strong> a prevalência é minoritária (~14% no original desbalanceado). O split 75/25
+estratificado é feito <strong>primeiro, na base real</strong>; o undersampling aleatório da classe majoritária (seed 42) é
+aplicado <strong>só no treino</strong>. KMeans e Apriori usam a base cheia (distribuição real preservada); o teste mantém a
+prevalência real ≈ 0,14, então acurácia/PPV/NPV são medidos em prevalência real.</li>
 </ul>
 </div>
 </div>
@@ -7815,14 +8283,14 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Distribuição original (proporção):"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
-<span class="n">df0</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">Diabetes_binary</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
-<span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">Diabetes_binary</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
-<span class="n">df0b</span> <span class="o">=</span> <span class="n">df0</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">df_bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df0b</span><span class="p">,</span> <span class="n">df1</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_antes"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">df0</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">)],</span>
-                      <span class="s2">"n_depois_undersampling"</span><span class="p">:</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">df0b</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df1</span><span class="p">)]})</span>
+<span class="n">n0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="n">n1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="n">bal</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"classe"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"n_base"</span><span class="p">:</span> <span class="p">[</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">],</span>
+                    <span class="s2">"nota"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"majoritária: subamostrada à minoria só no treino (§5)"</span><span class="p">,</span>
+                             <span class="s2">"minoritária: integral no treino; contagens exatas em §5"</span><span class="p">]})</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">bal</span><span class="p">)))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"base balanceada:"</span><span class="p">,</span> <span class="n">df_bal</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5),"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas impressas em §5."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7836,7 +8304,7 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Distribuição original (proporção):
-{0: 0.79, 1: 0.21}
+{0.0: 0.861, 1.0: 0.139}
 </pre>
 </div>
 </div>
@@ -7847,20 +8315,20 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <thead>
 <tr style="text-align: right;">
 <th>classe</th>
-<th>n_antes</th>
-<th>n_depois_undersampling</th>
+<th>n_base</th>
+<th>nota</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0</td>
-<td>3948</td>
-<td>1052</td>
+<td>218334</td>
+<td>majoritária: subamostrada à minoria só no treino (§5)</td>
 </tr>
 <tr>
 <td>1</td>
-<td>1052</td>
-<td>1052</td>
+<td>35346</td>
+<td>minoritária: integral no treino; contagens exatas em §5</td>
 </tr>
 </tbody>
 </table>
@@ -7869,7 +8337,8 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>base balanceada: (2104, 20)
+<pre>EDA/KMeans/Apriori usam o df real completo; o undersampling é aplicado só no treino da árvore (§5),
+onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas impressas em §5.
 </pre>
 </div>
 </div>
@@ -7904,9 +8373,9 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-    <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;img src="assets/img/</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s1">" alt="</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1">"&gt;'</span><span class="p">))</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">'&gt;"</span><span class="p">))</span>
 
 
 <span class="n">prev_bar</span><span class="p">(</span><span class="s2">"Age"</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">14</span><span class="p">)},</span>
@@ -7968,9 +8437,9 @@ KMeans e Apriori usam a base cheia (distribuição real preservada); apenas o cl
             <span class="n">center</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">square</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cbar_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">"shrink"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">},</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Correlação entre fatores e diabetes"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_correlacao.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_correlacao.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="assets/img/diabetes_correlacao.png" alt="Correlacoes"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Correlacoes'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8025,9 +8494,9 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Faixa etária"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"cluster"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_kmeans.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_kmeans.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="assets/img/diabetes_kmeans.png" alt="Clusters KMeans"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Clusters KMeans'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8057,36 +8526,36 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <tbody>
 <tr>
 <td>1</td>
-<td>28.151</td>
-<td>5.794</td>
-<td>3.216</td>
-<td>3.638</td>
-<td>3.009</td>
-<td>0.000</td>
-<td>0.0</td>
-<td>0.089</td>
-</tr>
-<tr>
-<td>0</td>
-<td>28.206</td>
-<td>7.181</td>
-<td>3.165</td>
-<td>3.753</td>
-<td>3.012</td>
-<td>1.000</td>
-<td>0.0</td>
-<td>0.223</td>
+<td>26.677</td>
+<td>6.820</td>
+<td>2.026</td>
+<td>1.134</td>
+<td>1.776</td>
+<td>0.017</td>
+<td>0.248</td>
+<td>0.043</td>
 </tr>
 <tr>
 <td>2</td>
-<td>28.256</td>
-<td>7.754</td>
-<td>3.109</td>
-<td>3.722</td>
-<td>2.995</td>
-<td>0.504</td>
-<td>1.0</td>
-<td>0.294</td>
+<td>29.886</td>
+<td>9.545</td>
+<td>2.652</td>
+<td>1.660</td>
+<td>1.175</td>
+<td>0.940</td>
+<td>0.612</td>
+<td>0.220</td>
+</tr>
+<tr>
+<td>0</td>
+<td>30.782</td>
+<td>8.584</td>
+<td>3.937</td>
+<td>22.421</td>
+<td>13.604</td>
+<td>0.624</td>
+<td>0.588</td>
+<td>0.287</td>
 </tr>
 </tbody>
 </table>
@@ -8095,7 +8564,7 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>KMeans k=3 — tamanho dos clusters: {0: 1294, 1: 1590, 2: 2116}
+<pre>KMeans k=3 — tamanho dos clusters: {0: 34806, 1: 128569, 2: 90305}
 </pre>
 </div>
 </div>
@@ -8114,8 +8583,10 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">5. Árvore de decisão + matriz de confusão<a class="anchor-link" href="#5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">¶</a></h2><p>A árvore prevê <code>Diabetes_binary</code> na base balanceada (split 75/25 estratificado).
-A matriz de confusão e a acurácia resumem o desempenho; a importância revela o top-5 de fatores.</p>
+<h2 id="5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">5. Árvore de decisão + matriz de confusão<a class="anchor-link" href="#5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">¶</a></h2><p>A árvore prevê <code>Diabetes_binary</code> com split 75/25 estratificado feito primeiro na base real;
+o undersampling balanceia <strong>só o treino</strong> e o teste mantém a prevalência real ≈ 0,14.
+A matriz de confusão e a acurácia resumem o desempenho em prevalência real
+(métrica em teste balanceado seria otimista); a importância revela o top-5 de fatores.</p>
 </div>
 </div>
 </div>
@@ -8128,11 +8599,16 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">df_bal</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">])</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">df_bal</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">,</span> <span class="s2">"cluster"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Diabetes_binary"</span><span class="p">]</span>
 <span class="n">Xtr</span><span class="p">,</span> <span class="n">Xte</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">yte</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
-<span class="n">tree</span> <span class="o">=</span> <span class="n">run_tree</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">)</span>
-<span class="n">pred</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">)</span>
+<span class="n">neg</span> <span class="o">=</span> <span class="n">Xtr</span><span class="p">[</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>  <span class="c1"># undersample SÓ treino</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">Xtr</span><span class="p">[</span><span class="n">ytr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">Xtr_b</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">neg</span><span class="p">,</span> <span class="n">pos</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">ytr_b</span> <span class="o">=</span> <span class="n">ytr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">Xtr_b</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"treino balanceado: </span><span class="si">{</span><span class="n">Xtr_b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, holdout prevalência: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">run_tree</span><span class="p">(</span><span class="n">Xtr_b</span><span class="p">,</span> <span class="n">ytr_b</span><span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">)</span>  <span class="c1"># Xte com prevalência real ~0,14</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">confusion_summary</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Acurácia:"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Matriz de confusão [[VN, FP], [FN, VP]]:"</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="s2">"confusion_matrix"</span><span class="p">])</span>
@@ -8149,18 +8625,18 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Predito"</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Real"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_confusao.png"</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_confusao.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="assets/img/diabetes_confusao.png" alt="Matriz de confusao"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">' alt='Matriz de confusao'&gt;"</span><span class="p">))</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span><span class="n">top5</span><span class="p">[</span><span class="s2">"fator"</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">top5</span><span class="p">[</span><span class="s2">"importancia"</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Top-5 fatores (importância da árvore)"</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Importância"</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_importancia.png"</span><span class="p">)</span>
+<span class="n">url_imp</span> <span class="o">=</span> <span class="n">save_fig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">"diabetes_importancia.png"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;img src="assets/img/diabetes_importancia.png" alt="Top fatores"&gt;'</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;img src='</span><span class="si">{</span><span class="n">url_imp</span><span class="si">}</span><span class="s2">' alt='Top fatores'&gt;"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -8173,8 +8649,9 @@ A matriz de confusão e a acurácia resumem o desempenho; a importância revela 
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Acurácia: 0.559
-Matriz de confusão [[VN, FP], [FN, VP]]: [[147, 116], [116, 147]]
+<pre>treino balanceado: (53018, 21), holdout prevalência: 0.1393
+Acurácia: 0.659
+Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 </pre>
 </div>
 </div>
@@ -8190,24 +8667,24 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[147, 116], [116, 147]]
 </thead>
 <tbody>
 <tr>
+<td>HighBP</td>
+<td>0.1480</td>
+</tr>
+<tr>
 <td>BMI</td>
-<td>0.2357</td>
+<td>0.1380</td>
 </tr>
 <tr>
 <td>Age</td>
-<td>0.1369</td>
-</tr>
-<tr>
-<td>PhysHlth</td>
-<td>0.1121</td>
+<td>0.1039</td>
 </tr>
 <tr>
 <td>GenHlth</td>
-<td>0.0887</td>
+<td>0.1003</td>
 </tr>
 <tr>
-<td>MentHlth</td>
-<td>0.0870</td>
+<td>Income</td>
+<td>0.0891</td>
 </tr>
 </tbody>
 </table>
@@ -8216,7 +8693,7 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[147, 116], [116, 147]]
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Top-5 fatores: BMI, Age, PhysHlth, GenHlth, MentHlth
+<pre>Top-5 fatores: HighBP, BMI, Age, GenHlth, Income
 </pre>
 </div>
 </div>
@@ -8230,6 +8707,34 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[147, 116], [116, 147]]
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
 <img alt="Top fatores" src="assets/img/diabetes_importancia.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7bc3bcbf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"prevalência holdout: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> (base: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">yte</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mf">0.02</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>prevalência holdout: 0.1393 (base: 0.1393)
+</pre>
 </div>
 </div>
 </div>
@@ -8251,7 +8756,7 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlxtend.frequent_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">apriori</span><span class="p">,</span> <span class="n">association_rules</span>
@@ -8281,7 +8786,7 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>19 itemsets frequentes, 6 regras (lift&gt;1.1)
+<pre>15 itemsets frequentes, 22 regras (lift&gt;1.1)
 </pre>
 </div>
 </div>
@@ -8302,44 +8807,72 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 <tr>
 <td>frozenset({'Diabetes'})</td>
 <td>frozenset({'HighBP'})</td>
-<td>0.141</td>
-<td>0.671</td>
-<td>1.422</td>
+<td>0.105</td>
+<td>0.753</td>
+<td>1.754</td>
 </tr>
 <tr>
 <td>frozenset({'HighBP'})</td>
 <td>frozenset({'Diabetes'})</td>
-<td>0.141</td>
-<td>0.299</td>
-<td>1.422</td>
+<td>0.105</td>
+<td>0.244</td>
+<td>1.754</td>
 </tr>
 <tr>
-<td>frozenset({'Diabetes'})</td>
+<td>frozenset({'DiffWalk'})</td>
+<td>frozenset({'HighBP'})</td>
+<td>0.114</td>
+<td>0.675</td>
+<td>1.574</td>
+</tr>
+<tr>
+<td>frozenset({'HighBP'})</td>
+<td>frozenset({'DiffWalk'})</td>
+<td>0.114</td>
+<td>0.265</td>
+<td>1.574</td>
+</tr>
+<tr>
+<td>frozenset({'HighChol', 'Smoker'})</td>
+<td>frozenset({'HighBP'})</td>
+<td>0.134</td>
+<td>0.637</td>
+<td>1.484</td>
+</tr>
+<tr>
+<td>frozenset({'HighBP'})</td>
+<td>frozenset({'HighChol', 'Smoker'})</td>
+<td>0.134</td>
+<td>0.312</td>
+<td>1.484</td>
+</tr>
+<tr>
 <td>frozenset({'HighChol'})</td>
-<td>0.124</td>
-<td>0.591</td>
-<td>1.397</td>
+<td>frozenset({'HighBP', 'Smoker'})</td>
+<td>0.134</td>
+<td>0.316</td>
+<td>1.476</td>
+</tr>
+<tr>
+<td>frozenset({'HighBP', 'Smoker'})</td>
+<td>frozenset({'HighChol'})</td>
+<td>0.134</td>
+<td>0.626</td>
+<td>1.476</td>
+</tr>
+<tr>
+<td>frozenset({'HighBP'})</td>
+<td>frozenset({'HighChol'})</td>
+<td>0.255</td>
+<td>0.594</td>
+<td>1.401</td>
 </tr>
 <tr>
 <td>frozenset({'HighChol'})</td>
-<td>frozenset({'Diabetes'})</td>
-<td>0.124</td>
-<td>0.294</td>
-<td>1.397</td>
-</tr>
-<tr>
-<td>frozenset({'Diabetes'})</td>
-<td>frozenset({'NoActivity'})</td>
-<td>0.101</td>
-<td>0.480</td>
-<td>1.293</td>
-</tr>
-<tr>
-<td>frozenset({'NoActivity'})</td>
-<td>frozenset({'Diabetes'})</td>
-<td>0.101</td>
-<td>0.272</td>
-<td>1.293</td>
+<td>frozenset({'HighBP'})</td>
+<td>0.255</td>
+<td>0.601</td>
+<td>1.401</td>
 </tr>
 </tbody>
 </table>
@@ -8360,11 +8893,12 @@ OU (IMC ≥ 30 E atividade física = 0)
 ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + acompanhamento).</p>
 <p><strong>Recomendações (3 prevenções priorizadas):</strong></p>
 <ol>
-<li>SE sedentarismo com IMC ≥ 30 → recomenda-se programa de atividade física — o grupo de maior prevalência na EDA.</li>
-<li>SE pressão alta + colesterol alto e idade ≥ 55 anos (faixas 9–13) → recomenda-se rastreio combinado, onde a prevalência dispara.</li>
-<li>SE saúde geral ruim (GenHlth ≥ 4) → recomenda-se acompanhamento com avaliação de locomoção e dias de saúde ruim.</li>
+<li>Recomenda-se programa de atividade física para sedentários com IMC ≥ 30 — o grupo de maior prevalência na EDA.</li>
+<li>Recomenda-se rastreio combinado pressão + colesterol em ≥ 55 anos (faixas 9–13), onde a prevalência dispara.</li>
+<li>Recomenda-se acompanhamento de saúde geral (GenHlth ≥ 4) com avaliação de locomoção e dias de saúde ruim.</li>
 </ol>
-<p>A amostra abaixo (200 linhas) replica o formato dos dados para auditoria.</p>
+<p>A amostra abaixo (200 linhas aleatórias, seed 42, sem estratificação, da base carregada —
+reais quando <code>data/</code> presente, sintéticas caso contrário) replica o formato dos dados para auditoria.</p>
 </div>
 </div>
 </div>
@@ -8373,14 +8907,15 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"cluster"</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">outp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"../docs/assets/data/sample_diabetes.csv"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"cluster"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">outp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"docs"</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"sample_diabetes.csv"</span>
 <span class="n">outp</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">sample</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"sample:"</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">"bytes:"</span><span class="p">,</span> <span class="n">outp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"cluster"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">columns</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"sample REAL"</span> <span class="k">if</span> <span class="n">is_real</span> <span class="k">else</span> <span class="s2">"sample SINTÉTICO"</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">"bytes:"</span><span class="p">,</span> <span class="n">outp</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">df_to_html_table</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
 </pre></div>
 </div>
@@ -8394,7 +8929,7 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>sample: (200, 20) bytes: 8884
+<pre>sample REAL (200, 22) bytes: 18129
 </pre>
 </div>
 </div>
@@ -8424,228 +8959,250 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 <th>DiffWalk</th>
 <th>Sex</th>
 <th>Age</th>
+<th>Education</th>
+<th>Income</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>21.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>3.0</td>
+<td>7.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>7.0</td>
+<td>4.0</td>
+<td>2.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>28.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>13.0</td>
+<td>6.0</td>
+<td>6.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>24.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>27.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>4.0</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>31.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>27.0</td>
+<td>27.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>8.0</td>
+<td>3.0</td>
+<td>2.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>33.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>4.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>7.0</td>
+<td>3.0</td>
+<td>6.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>29.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>10.0</td>
+<td>6.0</td>
+<td>8.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>27.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>10.0</td>
+<td>4.0</td>
+<td>8.0</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
 <td>25.0</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>11</td>
-<td>4</td>
-<td>1</td>
-<td>1</td>
-<td>4</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>8.0</td>
+<td>6.0</td>
+<td>8.0</td>
 </tr>
 <tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>38.7</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>1</td>
-<td>6</td>
-<td>0</td>
-<td>0</td>
-<td>5</td>
-</tr>
-<tr>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>27.7</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>2</td>
-<td>6</td>
-<td>0</td>
-<td>1</td>
-<td>5</td>
-</tr>
-<tr>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>21.4</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>2</td>
-<td>0</td>
-<td>3</td>
-<td>0</td>
-<td>0</td>
-<td>13</td>
-</tr>
-<tr>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>30.5</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>2</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>8</td>
-</tr>
-<tr>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>18.9</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>5</td>
-<td>0</td>
-<td>10</td>
-<td>0</td>
-<td>1</td>
-<td>11</td>
-</tr>
-<tr>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>36.4</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>17</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>11</td>
-</tr>
-<tr>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>25.6</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>4</td>
-<td>4</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-</tr>
-<tr>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>27.7</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>3</td>
-<td>1</td>
-<td>9</td>
-<td>0</td>
-<td>1</td>
-<td>8</td>
-</tr>
-<tr>
-<td>0</td>
-<td>1</td>
-<td>1</td>
-<td>1</td>
-<td>23.8</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>1</td>
-<td>0</td>
-<td>5</td>
-<td>3</td>
-<td>7</td>
-<td>0</td>
-<td>1</td>
-<td>4</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>33.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>8.0</td>
+<td>5.0</td>
+<td>8.0</td>
 </tr>
 </tbody>
 </table>
@@ -8674,9 +9231,9 @@ ENTÃO encaminhar para rastreio prioritário de diabetes (glicemia de jejum + ac
 </div>
 </section>
 </main>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-<script src="assets/js/tables.js" defer></script>
-<script src="assets/js/charts.js" defer></script>
-<script src="assets/js/simulators.js" defer></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script src="assets/js/tables.js" defer></script>
+  <script src="assets/js/charts.js" defer></script>
+  <script src="assets/js/simulators.js" defer></script>
 </body>
 </html>

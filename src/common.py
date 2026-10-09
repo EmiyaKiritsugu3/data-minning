@@ -15,7 +15,24 @@ def load_csv(path: str) -> DataFrame:
     """Le um CSV e retorna um DataFrame."""
     import pandas as pd
 
-    return pd.read_csv(path)
+    try:
+        return pd.read_csv(path)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"CSV não encontrado: {path} — baixe do Kaggle para data/ (veja README)"
+        ) from exc
+    except UnicodeDecodeError as exc:
+        raise UnicodeDecodeError(
+            exc.encoding,
+            exc.object,
+            exc.start,
+            exc.end,
+            f"{path}: {exc.reason} — verifique o encoding do CSV em data/",
+        ) from exc
+    except ValueError as exc:
+        raise type(exc)(
+            f"{path}: {exc} — verifique o CSV em data/ (Kaggle)"
+        ) from exc
 
 
 def save_fig(fig, name: str) -> str:

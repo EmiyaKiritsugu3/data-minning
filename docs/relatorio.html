@@ -25,16 +25,17 @@
     <a href="saude.html">Saúde (Diabetes)</a> e
     <a href="fraude.html">Fraude em cartão de crédito</a> — aplicam o mesmo
     roteiro (EDA → preparação → mineração → regra de decisão) a domínios
-    diferentes. E-commerce e saúde usam dados sintéticos ilustrativos (avisado
-    nas páginas); fraude usa os dados reais do Kaggle
-    (<code>mlg-ulb/creditcardfraud</code>: 284.807 transações, 492 fraudes).</p>
+    diferentes. Os três usam dados reais do Kaggle:
+    Olist (<code>olistbr/brazilian-ecommerce</code>: 99.441 pedidos, 112.650 itens,
+    95.420 clientes), BRFSS 2015 (253.680 indivíduos, prevalência de diabetes 0,139) e
+    fraude (<code>mlg-ulb/creditcardfraud</code>: 284.807 transações, 492 fraudes).</p>
 
     <h3>1. O que é comum nos três</h3>
     <ul>
       <li><b>Desbalanceamento.</b> Em todos os casos a classe de interesse é minoria:
-      fraudes são 0,17% das transações; diabéticos têm prevalência 0,21 na base de
-      saúde; no e-commerce o segmento de alto valor tem só 295 de 3214 clientes e as
-      notas baixas (≤3) são minoria. Métricas cruas como acurácia enganam — por isso
+      fraudes são 0,17% das transações; diabéticos têm prevalência 0,139 na base de
+      saúde (n=253.680); no e-commerce o segmento de alto valor tem só 2.273 de 95.420 clientes e as
+      notas baixas (≤3) são minoria (22,9%). Métricas cruas como acurácia enganam — por isso
       fraude se avalia por precision/recall/custo e saúde por matriz de confusão.</li>
       <li><b>Top-correlações que viram regra.</b> Cada EDA entregou um par forte que
       sustenta a decisão: atraso × nota (atraso &gt; 7 dias derruba o review);
@@ -42,9 +43,10 @@
       (maiores desvios entre fraude e transação legítima) e horário (madrugada, pico
       de 1,7% às 2h) × fraude.</li>
       <li><b>Clusters antes de classificar.</b> Os três usam KMeans para segmentar
-      antes de decidir: k=4 sobre RFM (e-commerce), k=3 de perfis de risco
-      (tamanhos 1294/1590/2116 em saúde) e k=4 sobre transações (fraude, onde um
-      cluster concentrou tickets altos). Segmentar primeiro barateia a decisão —
+      antes de decidir: k=4 sobre RFM (e-commerce, com segmento de alto valor de 2.273
+      clientes a ~R$1.145), k=3 de perfis de risco
+      (tamanhos 34806/128569/90305 em saúde) e k=4 sobre transações (fraude, onde o
+      cluster 3 concentrou tickets altos: 200 transações, ticket médio €1.270,35). Segmentar primeiro barateia a decisão —
       cada segmento ganha uma ação distinta.</li>
     </ul>
 
@@ -61,8 +63,8 @@
       <tbody>
         <tr>
           <td>Natureza dos dados</td>
-          <td>Sintéticos (ilustrativos)</td>
-          <td>Sintéticos (ilustrativos)</td>
+          <td>Reais (Olist, Kaggle: 99.441 pedidos)</td>
+          <td>Reais (BRFSS 2015: n=253.680)</td>
           <td>Reais (Kaggle)</td>
         </tr>
         <tr>
@@ -80,7 +82,7 @@
         <tr>
           <td>Técnica distintiva</td>
           <td>Co-ocorrência de categorias (bundles)</td>
-          <td>Apriori (19 itemsets, 6 regras)</td>
+          <td>Apriori (15 itemsets, 22 regras)</td>
           <td>Limiar por custo esperado (threshold 0,98)</td>
         </tr>
       </tbody>
@@ -88,22 +90,24 @@
 
     <h3>3. Limitações</h3>
     <ul>
-      <li>E-commerce e saúde rodaram sobre dados sintéticos: padrões e números
-      (ex.: acurácia 0,80 da árvore Olist, 0,559 na saúde) são ilustrativos e precisam
-      de reexecução com os CSVs reais do Kaggle.</li>
+      <li>Os três rodaram sobre dados reais com split único: a árvore Olist usa
+      GroupShuffleSplit por pedido (acurácia 0,69, sem vazamento), a da saúde treina com
+      undersampling só no treino e avalia no holdout real (acurácia 0,659,
+      prevalência 0,1393) — ambas sem validação cruzada nem teste fora do tempo.</li>
       <li>Amostras de 200 linhas em <code>assets/data/</code> servem à navegação, não
-      a conclusões estatísticas.</li>
-      <li>Modelos sem validação cruzada nem teste fora do tempo; limiar de fraude
-      calibrado num split único.</li>
+      a conclusões estatísticas (a de fraude usa oversampling 100/100 documentado —
+      no real são 0,17%).</li>
+      <li>Limiar de fraude calibrado num split único (threshold 0,98; precision 0,562,
+      recall 0,831; custos FP=10, FN=500).</li>
       <li>Sem avaliação de justiça/impacto (viés por UF, idade, horário) antes de operar.</li>
     </ul>
 
     <h3>4. Com mais tempo</h3>
     <ul>
-      <li>Recomenda-se baixar os datasets reais (Olist 9 CSVs; BRFSS 2015) e reexecutar
-      os notebooks 01 e 02 para validar os padrões sintéticos.</li>
       <li>Recomenda-se validação cruzada + busca de hiperparâmetros (k do KMeans,
-      profundidade da árvore, lift mínimo do Apriori) e curva de calibração do limiar
+      profundidade da árvore, lift mínimo do Apriori) e validação fora do tempo
+      (safra de pedidos mais recente; BRFSS de outro ano).</li>
+      <li>Recomenda-se curva de calibração do limiar
       de fraude por faixa de horário/valor.</li>
       <li>Recomenda-se piloto A/B das ações (estoque regional, step-up noturno,
       rastreio do grupo de risco) medindo nota, recall operacional e custo real.</li>
@@ -114,5 +118,7 @@
   <footer>
     <p>Disciplina SAD — Mineração de Dados. Dados brutos (Kaggle) não versionados; ver README.</p>
   </footer>
+  <script src="assets/js/tables.js" defer></script>
+  <script src="assets/js/simulators.js" defer></script>
 </body>
 </html>
