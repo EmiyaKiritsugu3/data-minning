@@ -1,6 +1,20 @@
 from pathlib import Path
 
 
+def test_prose_coverage():
+    # cada figura tem uma Leitura: por perto; cada página explica as técnicas
+    minima_leitura = {
+        "docs/ecommerce.html": 8,
+        "docs/saude.html": 9,
+        "docs/fraude.html": 7,
+    }
+    for page, minimo in minima_leitura.items():
+        n = Path(page).read_text(encoding="utf-8").count("Leitura:")
+        assert n >= minimo, f"{page}: {n} leituras < {minimo}"
+    for page in minima_leitura:
+        assert Path(page).read_text(encoding="utf-8").count("Como ler") >= 3, page
+
+
 def test_site_integrity():
     for p in ["docs/index.html", "docs/ecommerce.html", "docs/saude.html",
               "docs/fraude.html", "docs/relatorio.html"]:

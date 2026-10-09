@@ -7291,7 +7291,59 @@ a.anchor-link {
   }
 }
 </style>
-  <link rel="stylesheet" href="assets/css/style.css">
+
+
+
+<style>
+  .jp-Mermaid:not(.jp-RenderedMermaid) {
+    display: none;
+  }
+
+  .jp-RenderedMermaid {
+    overflow: auto;
+    display: flex;
+  }
+
+  .jp-RenderedMermaid.jp-mod-warning {
+    width: auto;
+    padding: 0.5em;
+    margin-top: 0.5em;
+    border: var(--jp-border-width) solid var(--jp-warn-color2);
+    border-radius: var(--jp-border-radius);
+    color: var(--jp-ui-font-color1);
+    font-size: var(--jp-ui-font-size1);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .jp-RenderedMermaid figure {
+    margin: 0;
+    overflow: auto;
+    max-width: 100%;
+  }
+
+  .jp-RenderedMermaid img {
+    max-width: 100%;
+  }
+
+  .jp-RenderedMermaid-Details > pre {
+    margin-top: 1em;
+  }
+
+  .jp-RenderedMermaid-Summary {
+    color: var(--jp-warn-color2);
+  }
+
+  .jp-RenderedMermaid:not(.jp-mod-warning) pre {
+    display: none;
+  }
+
+  .jp-RenderedMermaid-Summary > pre {
+    display: inline-block;
+    white-space: normal;
+  }
+</style>
+<!-- End of mermaid configuration -->  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
   <header>
@@ -7313,7 +7365,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Deteccao-de-fraude-em-cartao-de-credito">Detecção de fraude em cartão de crédito<a class="anchor-link" href="#Deteccao-de-fraude-em-cartao-de-credito">¶</a></h1><p><strong>Objetivo:</strong> apoiar a decisao de aprovar, revisar ou bloquear transacoes a partir de mineracao de dados.</p>
+<h1 id="Deteccao-de-fraude-em-cartao-de-credito">Deteccao de fraude em cartao de credito<a class="anchor-link" href="#Deteccao-de-fraude-em-cartao-de-credito">¶</a></h1><p><strong>Objetivo:</strong> apoiar a decisao de aprovar, revisar ou bloquear transacoes a partir de mineracao de dados.</p>
 <p><strong>Fonte:</strong> <code>mlg-ulb/creditcardfraud</code> (284.807 transacoes europeias, 492 fraudes = 0,17%).
 Comando real usado para obter os dados:</p>
 <div class="highlight"><pre><span></span>kaggle<span class="w"> </span>datasets<span class="w"> </span>download<span class="w"> </span>mlg-ulb/creditcardfraud
@@ -7912,6 +7964,7 @@ maiores desvios: ['V3', 'V14', 'V17', 'V12', 'V10']
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="2.-Mineracao:-perfis-com-KMeans">2. Mineracao: perfis com KMeans<a class="anchor-link" href="#2.-Mineracao:-perfis-com-KMeans">¶</a></h2><p><code>run_kmeans</code> (k=4) sobre subamostra estratificada de 10k transacoes padronizadas,
 para descobrir perfis de comportamento sem usar o rotulo.</p>
+<p><strong>Como ler — KMeans:</strong> agrupa 10k transações por comportamento sem ver o rótulo de fraude — serve para perfis e fila de revisão, não para detectar sozinho (as fraudes se espalham pelos grupos).</p>
 </div>
 </div>
 </div>
@@ -8053,6 +8106,7 @@ para descobrir perfis de comportamento sem usar o rotulo.</p>
 <h2 id="3.-Mineracao:-classificacao-supervisionada">3. Mineracao: classificacao supervisionada<a class="anchor-link" href="#3.-Mineracao:-classificacao-supervisionada">¶</a></h2><p><code>run_tree</code> como baseline + regressao logistica com <code>class_weight=balanced</code> (gera escore
 probabilistico para a analise de limiar). Avaliacao com <code>confusion_summary</code> (matriz de confusao).
 Split 70/30 estratificado; <code>Time</code>/<code>Amount</code> padronizados.</p>
+<p><strong>Como ler — árvore vs logística:</strong> a árvore (baseline, sem ponderação) decide por regras; a logística com peso balanced devolve escore de 0 a 1 — esse escore alimenta o limiar da §4. Compare o recall com essa ressalva.</p>
 </div>
 </div>
 </div>
@@ -8148,6 +8202,7 @@ depende do custo de cada erro: e a analise de limiar (threshold) abaixo.</p>
 <h2 id="4.-Analise-de-limiar-(threshold):-precision/recall-vs-custo">4. Analise de limiar (threshold): precision/recall vs custo<a class="anchor-link" href="#4.-Analise-de-limiar-(threshold):-precision/recall-vs-custo">¶</a></h2><p>Varrer o limiar de decisao do escore e medir precision, recall e custo esperado
 (FP = revisao manual, custo 10; FN = fraude perdida, custo 500). O limiar recomendado
 minimiza o custo total no conjunto de teste.</p>
+<p><strong>Como ler — limiar:</strong> cada limiar troca precision (acertos entre bloqueios) por recall (fraudes pegas); o custo total (FP×10 + FN×500) escolhe o ponto — 0,98 aqui.</p>
 </div>
 </div>
 </div>
@@ -8522,12 +8577,12 @@ custa 50x mais que uma revisao manual (FP=10).</p>
 O valor exato do limiar esta impresso na secao 4 (variavel <code>T_REC</code>).</p>
 <p><strong>Recomendacoes:</strong></p>
 <ol>
-<li>SE cada fraude evitada paga dezenas de revisoes manuais (custo FN &gt;&gt; FP)
-ENTÃO recomenda-se operar no limiar de custo minimo (alto recall).</li>
-<li>SE a taxa de fraude e maior de madrugada/horarios de pico (secao 1)
-ENTÃO recomenda-se step-up adaptativo: mesmo escore medio a noite deve exigir autenticacao reforcada.</li>
-<li>SE os micro-clusters de risco do KMeans concentram a fraude
-ENTÃO recomenda-se fila de revisao priorizada por escore, em vez de revisao aleatoria.</li>
+<li>Recomenda-se operar no limiar de custo minimo (alto recall): cada fraude evitada paga
+dezenas de revisoes manuais, dado o custo FN &gt;&gt; FP.</li>
+<li>Recomenda-se step-up adaptativo de madrugada/horarios de alta taxa de fraude (secao 1):
+mesmo escore medio a noite deve exigir autenticacao reforcada.</li>
+<li>Recomenda-se fila de revisao priorizada por escore nos micro-clusters de risco do KMeans,
+em vez de revisao aleatoria.</li>
 <li>Recomenda-se recalibrar o limiar mensalmente: a distribuicao de fraude muda e o ponto
 de custo minimo se desloca; monitorar precision/recall em producao.</li>
 </ol>
@@ -8569,12 +8624,12 @@ de custo minimo se desloca; monitorar precision/recall em producao.</li>
 </div>
 </div>
 </div>
+</div>
 <section>
 <h2>Painel interativo — explore, visualize, simule</h2>
 <p><label>Busca global nas tabelas:
 <input type="search" id="global-table-filter" placeholder="ex: 0.98, 500, recall…"></label>
 <small>Todas as tabelas ganham busca própria e ordenação por clique no cabeçalho.</small></p>
-<p>Amostra real: <a href="assets/data/sample_fraud.csv">sample_fraud.csv</a> (200 linhas: 100 fraudes + 100 legítimas; oversampling documentado — no real são 0,17%).</p>
 <h3>Gráficos vivos (requer internet — CDN Plotly; sem internet, veja as figuras estáticas)</h3>
 <div id="chart-fraude-pr" class="interactive-chart"></div>
 <div id="chart-fraude-custo" class="interactive-chart"></div>
@@ -8587,11 +8642,10 @@ de custo minimo se desloca; monitorar precision/recall em producao.</li>
 <p class="sim-result">Carregando…</p>
 </div>
 </section>
-</div>
 </main>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-<script src="assets/js/tables.js" defer></script>
-<script src="assets/js/charts.js" defer></script>
-<script src="assets/js/simulators.js" defer></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script src="assets/js/tables.js" defer></script>
+  <script src="assets/js/charts.js" defer></script>
+  <script src="assets/js/simulators.js" defer></script>
 </body>
 </html>

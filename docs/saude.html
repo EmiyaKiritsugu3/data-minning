@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Saúde (Diabetes) — Mineração de Dados</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Saúde (Diabetes) — Mineração de Dados</title>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7291,459 +7291,9 @@ a.anchor-link {
   }
 }
 </style>
-<!-- Load mathjax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
-<!-- MathJax configuration -->
-<script type="text/x-mathjax-config">
-    init_mathjax = function() {
-        if (window.MathJax) {
-        // MathJax loaded
-            MathJax.Hub.Config({
-                TeX: {
-                    equationNumbers: {
-                    autoNumber: "AMS",
-                    useLabelIds: true
-                    }
-                },
-                tex2jax: {
-                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-                    processEscapes: true,
-                    processEnvironments: true
-                },
-                displayAlign: 'center',
-                messageStyle: 'none',
-                CommonHTML: {
-                    linebreaks: {
-                    automatic: true
-                    }
-                }
-            });
-
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-        }
-    }
-    init_mathjax();
-    </script>
-<!-- End of mathjax configuration --><script type="module">
-  document.addEventListener("DOMContentLoaded", async () => {
-    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
-    // do not load mermaidjs if not needed
-    if (!diagrams.length) {
-      return;
-    }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
-    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
-    if(elkUrl) {
-      const elkLayouts = (await import(elkUrl)).default;
-      mermaid.registerLayoutLoaders(elkLayouts);
-    }
-    const parser = new DOMParser();
-
-    mermaid.initialize({
-      maxTextSize: 100000,
-      maxEdges: 100000,
-      startOnLoad: false,
-      fontFamily: window
-        .getComputedStyle(document.body)
-        .getPropertyValue("--jp-ui-font-family"),
-      theme: document.querySelector("body[data-jp-theme-light='true']")
-        ? "default"
-        : "dark",
-    });
-
-    let _nextMermaidId = 0;
-
-    function makeMermaidImage(svg) {
-      const img = document.createElement("img");
-      const doc = parser.parseFromString(svg, "image/svg+xml");
-      const svgEl = doc.querySelector("svg");
-      const { maxWidth } = svgEl?.style || {};
-      const firstTitle = doc.querySelector("title");
-      const firstDesc = doc.querySelector("desc");
-
-      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
-      if (maxWidth) {
-        img.width = parseInt(maxWidth);
-      }
-      if (firstTitle) {
-        img.setAttribute("alt", firstTitle.textContent);
-      }
-      if (firstDesc) {
-        const caption = document.createElement("figcaption");
-        caption.className = "sr-only";
-        caption.textContent = firstDesc.textContent;
-        return [img, caption];
-      }
-      return [img];
-    }
-
-    async function makeMermaidError(text) {
-      let errorMessage = "";
-      try {
-        await mermaid.parse(text);
-      } catch (err) {
-        errorMessage = `${err}`;
-      }
-
-      const result = document.createElement("details");
-      result.className = 'jp-RenderedMermaid-Details';
-      const summary = document.createElement("summary");
-      summary.className = 'jp-RenderedMermaid-Summary';
-      const pre = document.createElement("pre");
-      const code = document.createElement("code");
-      code.innerText = text;
-      pre.appendChild(code);
-      summary.appendChild(pre);
-      result.appendChild(summary);
-
-      const warning = document.createElement("pre");
-      warning.innerText = errorMessage;
-      result.appendChild(warning);
-      return [result];
-    }
-
-    async function renderOneMarmaid(src) {
-      const id = `jp-mermaid-${_nextMermaidId++}`;
-      const parent = src.parentNode;
-      let raw = src.textContent.trim();
-      const el = document.createElement("div");
-      el.style.visibility = "hidden";
-      document.body.appendChild(el);
-      let results = null;
-      let output = null;
-      try {
-        let { svg } = await mermaid.render(id, raw, el);
-        svg = cleanMermaidSvg(svg);
-        results = makeMermaidImage(svg);
-        output = document.createElement("figure");
-        results.map(output.appendChild, output);
-      } catch (err) {
-        parent.classList.add("jp-mod-warning");
-        results = await makeMermaidError(raw);
-        output = results[0];
-      } finally {
-        el.remove();
-      }
-      parent.classList.add("jp-RenderedMermaid");
-      parent.appendChild(output);
-    }
 
 
-    /**
-     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
-     */
-    function cleanMermaidSvg(svg) {
-      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
-      return `${SVG_XML_HEADER}${svg}`;
-    }
 
-
-    /**
-     * A regular expression for all void elements, which may include attributes and
-     * a slash.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
-     *
-     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
-     * but _any_ "malformed" tag will break the SVG rendering entirely.
-     */
-    const RE_VOID_ELEMENT =
-      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
-
-    /**
-     * Ensure a void element is closed with a slash, preserving any attributes.
-     */
-    function replaceVoidElement(match, tag, rest) {
-      rest = rest.trim();
-      if (!rest.endsWith('/')) {
-        rest = `${rest} /`;
-      }
-      return `<${tag} ${rest}>`;
-    }
-
-
-  /**
-   * Named HTML entities with their decimal equivalent codes.
-   *
-   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
-   * */
-  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
-<!ENTITY aacute "&#225;">
-<!ENTITY Acirc "&#194;">
-<!ENTITY acirc "&#226;">
-<!ENTITY acute "&#180;">
-<!ENTITY AElig "&#198;">
-<!ENTITY aelig "&#230;">
-<!ENTITY Agrave "&#192;">
-<!ENTITY agrave "&#224;">
-<!ENTITY alefsym "&#8501;">
-<!ENTITY Alpha "&#913;">
-<!ENTITY alpha "&#945;">
-<!ENTITY amp "&#38;">
-<!ENTITY and "&#8869;">
-<!ENTITY ang "&#8736;">
-<!ENTITY Aring "&#197;">
-<!ENTITY aring "&#229;">
-<!ENTITY asymp "&#8776;">
-<!ENTITY Atilde "&#195;">
-<!ENTITY atilde "&#227;">
-<!ENTITY Auml "&#196;">
-<!ENTITY auml "&#228;">
-<!ENTITY bdquo "&#8222;">
-<!ENTITY Beta "&#914;">
-<!ENTITY beta "&#946;">
-<!ENTITY brvbar "&#166;">
-<!ENTITY bull "&#8226;">
-<!ENTITY cap "&#8745;">
-<!ENTITY Ccedil "&#199;">
-<!ENTITY ccedil "&#231;">
-<!ENTITY cedil "&#184;">
-<!ENTITY cent "&#162;">
-<!ENTITY Chi "&#935;">
-<!ENTITY chi "&#967;">
-<!ENTITY circ "&#710;">
-<!ENTITY clubs "&#9827;">
-<!ENTITY cong "&#8773;">
-<!ENTITY copy "&#169;">
-<!ENTITY crarr "&#8629;">
-<!ENTITY cup "&#8746;">
-<!ENTITY curren "&#164;">
-<!ENTITY dagger "&#8224;">
-<!ENTITY Dagger "&#8225;">
-<!ENTITY darr "&#8595;">
-<!ENTITY dArr "&#8659;">
-<!ENTITY deg "&#176;">
-<!ENTITY Delta "&#916;">
-<!ENTITY delta "&#948;">
-<!ENTITY diams "&#9830;">
-<!ENTITY divide "&#247;">
-<!ENTITY Eacute "&#201;">
-<!ENTITY eacute "&#233;">
-<!ENTITY Ecirc "&#202;">
-<!ENTITY ecirc "&#234;">
-<!ENTITY Egrave "&#200;">
-<!ENTITY egrave "&#232;">
-<!ENTITY empty "&#8709;">
-<!ENTITY emsp "&#8195;">
-<!ENTITY ensp "&#8194;">
-<!ENTITY epsilon "&#949;">
-<!ENTITY Epsilon "&#917;">
-<!ENTITY equiv "&#8801;">
-<!ENTITY Eta "&#919;">
-<!ENTITY eta "&#951;">
-<!ENTITY ETH "&#208;">
-<!ENTITY eth "&#240;">
-<!ENTITY Euml "&#203;">
-<!ENTITY euml "&#235;">
-<!ENTITY exist "&#8707;">
-<!ENTITY fnof "&#402;">
-<!ENTITY forall "&#8704;">
-<!ENTITY frac12 "&#189;">
-<!ENTITY frac14 "&#188;">
-<!ENTITY frac34 "&#190;">
-<!ENTITY frasl "&#8260;">
-<!ENTITY Gamma "&#915;">
-<!ENTITY gamma "&#947;">
-<!ENTITY ge "&#8805;">
-<!ENTITY gt "&#62;">
-<!ENTITY harr "&#8596;">
-<!ENTITY hArr "&#8660;">
-<!ENTITY hearts "&#9829;">
-<!ENTITY hellip "&#8230;">
-<!ENTITY Iacute "&#205;">
-<!ENTITY iacute "&#237;">
-<!ENTITY Icirc "&#206;">
-<!ENTITY icirc "&#238;">
-<!ENTITY iexcl "&#161;">
-<!ENTITY Igrave "&#204;">
-<!ENTITY igrave "&#236;">
-<!ENTITY image "&#8465;">
-<!ENTITY infin "&#8734;">
-<!ENTITY int "&#8747;">
-<!ENTITY Iota "&#921;">
-<!ENTITY iota "&#953;">
-<!ENTITY iquest "&#191;">
-<!ENTITY isin "&#8712;">
-<!ENTITY Iuml "&#207;">
-<!ENTITY iuml "&#239;">
-<!ENTITY Kappa "&#922;">
-<!ENTITY kappa "&#954;">
-<!ENTITY Lambda "&#923;">
-<!ENTITY lambda "&#955;">
-<!ENTITY lang "&#9001;">
-<!ENTITY laquo "&#171;">
-<!ENTITY larr "&#8592;">
-<!ENTITY lArr "&#8656;">
-<!ENTITY lceil "&#8968;">
-<!ENTITY ldquo "&#8220;">
-<!ENTITY le "&#8804;">
-<!ENTITY lfloor "&#8970;">
-<!ENTITY lowast "&#8727;">
-<!ENTITY loz "&#9674;">
-<!ENTITY lrm "&#8206;">
-<!ENTITY lsaquo "&#8249;">
-<!ENTITY lsquo "&#8216;">
-<!ENTITY lt "&#60;">
-<!ENTITY macr "&#175;">
-<!ENTITY mdash "&#8212;">
-<!ENTITY micro "&#181;">
-<!ENTITY middot "&#183;">
-<!ENTITY minus "&#8722;">
-<!ENTITY Mu "&#924;">
-<!ENTITY mu "&#956;">
-<!ENTITY nabla "&#8711;">
-<!ENTITY nbsp "&#160;">
-<!ENTITY ndash "&#8211;">
-<!ENTITY ne "&#8800;">
-<!ENTITY ni "&#8715;">
-<!ENTITY not "&#172;">
-<!ENTITY notin "&#8713;">
-<!ENTITY nsub "&#8836;">
-<!ENTITY Ntilde "&#209;">
-<!ENTITY ntilde "&#241;">
-<!ENTITY Nu "&#925;">
-<!ENTITY nu "&#957;">
-<!ENTITY Oacute "&#211;">
-<!ENTITY oacute "&#243;">
-<!ENTITY Ocirc "&#212;">
-<!ENTITY ocirc "&#244;">
-<!ENTITY OElig "&#338;">
-<!ENTITY oelig "&#339;">
-<!ENTITY Ograve "&#210;">
-<!ENTITY ograve "&#242;">
-<!ENTITY oline "&#8254;">
-<!ENTITY Omega "&#937;">
-<!ENTITY omega "&#969;">
-<!ENTITY Omicron "&#927;">
-<!ENTITY omicron "&#959;">
-<!ENTITY oplus "&#8853;">
-<!ENTITY or "&#8870;">
-<!ENTITY ordf "&#170;">
-<!ENTITY ordm "&#186;">
-<!ENTITY Oslash "&#216;">
-<!ENTITY oslash "&#248;">
-<!ENTITY Otilde "&#213;">
-<!ENTITY otilde "&#245;">
-<!ENTITY otimes "&#8855;">
-<!ENTITY Ouml "&#214;">
-<!ENTITY ouml "&#246;">
-<!ENTITY para "&#182;">
-<!ENTITY part "&#8706;">
-<!ENTITY permil "&#8240;">
-<!ENTITY perp "&#8869;">
-<!ENTITY Phi "&#934;">
-<!ENTITY phi "&#966;">
-<!ENTITY Pi "&#928;">
-<!ENTITY pi "&#960;">
-<!ENTITY piv "&#982;">
-<!ENTITY plusmn "&#177;">
-<!ENTITY pound "&#163;">
-<!ENTITY prime "&#8242;">
-<!ENTITY Prime "&#8243;">
-<!ENTITY prod "&#8719;">
-<!ENTITY prop "&#8733;">
-<!ENTITY Psi "&#936;">
-<!ENTITY psi "&#968;">
-<!ENTITY quot "&#34;">
-<!ENTITY radic "&#8730;">
-<!ENTITY rang "&#9002;">
-<!ENTITY raquo "&#187;">
-<!ENTITY rarr "&#8594;">
-<!ENTITY rArr "&#8658;">
-<!ENTITY rceil "&#8969;">
-<!ENTITY rdquo "&#8221;">
-<!ENTITY real "&#8476;">
-<!ENTITY reg "&#174;">
-<!ENTITY rfloor "&#8971;">
-<!ENTITY Rho "&#929;">
-<!ENTITY rho "&#961;">
-<!ENTITY rlm "&#8207;">
-<!ENTITY rsaquo "&#8250;">
-<!ENTITY rsquo "&#8217;">
-<!ENTITY sbquo "&#8218;">
-<!ENTITY Scaron "&#352;">
-<!ENTITY scaron "&#353;">
-<!ENTITY sdot "&#8901;">
-<!ENTITY sect "&#167;">
-<!ENTITY shy "&#173;">
-<!ENTITY Sigma "&#931;">
-<!ENTITY sigma "&#963;">
-<!ENTITY sigmaf "&#962;">
-<!ENTITY sim "&#8764;">
-<!ENTITY spades "&#9824;">
-<!ENTITY sub "&#8834;">
-<!ENTITY sube "&#8838;">
-<!ENTITY sum "&#8721;">
-<!ENTITY sup "&#8835;">
-<!ENTITY sup1 "&#185;">
-<!ENTITY sup2 "&#178;">
-<!ENTITY sup3 "&#179;">
-<!ENTITY supe "&#8839;">
-<!ENTITY szlig "&#223;">
-<!ENTITY Tau "&#932;">
-<!ENTITY tau "&#964;">
-<!ENTITY there4 "&#8756;">
-<!ENTITY Theta "&#920;">
-<!ENTITY theta "&#952;">
-<!ENTITY thetasym "&#977;">
-<!ENTITY thinsp "&#8201;">
-<!ENTITY THORN "&#222;">
-<!ENTITY thorn "&#254;">
-<!ENTITY tilde "&#732;">
-<!ENTITY times "&#215;">
-<!ENTITY trade "&#8482;">
-<!ENTITY Uacute "&#218;">
-<!ENTITY uacute "&#250;">
-<!ENTITY uarr "&#8593;">
-<!ENTITY uArr "&#8657;">
-<!ENTITY Ucirc "&#219;">
-<!ENTITY ucirc "&#251;">
-<!ENTITY Ugrave "&#217;">
-<!ENTITY ugrave "&#249;">
-<!ENTITY uml "&#168;">
-<!ENTITY upsih "&#978;">
-<!ENTITY Upsilon "&#933;">
-<!ENTITY upsilon "&#965;">
-<!ENTITY Uuml "&#220;">
-<!ENTITY uuml "&#252;">
-<!ENTITY weierp "&#8472;">
-<!ENTITY Xi "&#926;">
-<!ENTITY xi "&#958;">
-<!ENTITY Yacute "&#221;">
-<!ENTITY yacute "&#253;">
-<!ENTITY yen "&#165;">
-<!ENTITY Yuml "&#376;">
-<!ENTITY yuml "&#255;">
-<!ENTITY Zeta "&#918;">
-<!ENTITY zeta "&#950;">
-<!ENTITY zwj "&#8205;">
-<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
-
-  /**
-   * A reasonably strict xml declaration.
-   */
-  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
-
-  /**
-   * The beginning of the XML doctype declaration.
-   */
-  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
-
-  /**
-   * The end of the XML docype declaration.
-   */
-  const DOCTYPE_END = ']>';
-
-  /**
-   * A full header for an SVG XML document.
-   */
-  const SVG_XML_HEADER = `${XML_DECL}
-    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
-
-    void Promise.all([...diagrams].map(renderOneMarmaid));
-  });
-</script>
 <style>
   .jp-Mermaid:not(.jp-RenderedMermaid) {
     display: none;
@@ -7793,8 +7343,8 @@ a.anchor-link {
     white-space: normal;
   }
 </style>
-<!-- End of mermaid configuration -->
-  <link rel="stylesheet" href="assets/css/style.css"></head>
+<!-- End of mermaid configuration -->  <link rel="stylesheet" href="assets/css/style.css">
+</head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
   <header>
     <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
@@ -8351,7 +7901,63 @@ onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-EDA-%E2%80%94-preval%C3%AAncia-por-idade,-press%C3%A3o,-colesterol-e-atividade-+-correla%C3%A7%C3%B5es">3. EDA — prevalência por idade, pressão, colesterol e atividade + correlações<a class="anchor-link" href="#3.-EDA-%E2%80%94-preval%C3%AAncia-por-idade,-press%C3%A3o,-colesterol-e-atividade-+-correla%C3%A7%C3%B5es">¶</a></h2><p>Quatro leituras de prevalência orientam a triagem; o heatmap mostra quais fatores andam juntos.</p>
+<h2 id="3.-EDA-%E2%80%94-preval%C3%AAncia-por-idade,-press%C3%A3o,-colesterol-e-atividade-+-correla%C3%A7%C3%B5es">3. EDA — prevalência por idade, pressão, colesterol e atividade + correlações<a class="anchor-link" href="#3.-EDA-%E2%80%94-preval%C3%AAncia-por-idade,-press%C3%A3o,-colesterol-e-atividade-+-correla%C3%A7%C3%B5es">¶</a></h2><p>Quatro leituras de prevalência orientam a triagem; o heatmap mostra quais fatores andam juntos.
+<strong>Legenda das faixas etárias</strong> — códigos <code>Age</code> do BRFSS 2015 (faixas de 5 anos):</p>
+<table>
+<thead>
+<tr>
+<th>Faixa</th>
+<th>Idade</th>
+<th>Faixa</th>
+<th>Idade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td>18–24</td>
+<td>F8</td>
+<td>55–59</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>25–29</td>
+<td>F9</td>
+<td>60–64</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>30–34</td>
+<td>F10</td>
+<td>65–69</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>35–39</td>
+<td><strong>F11</strong></td>
+<td><strong>70–74</strong></td>
+</tr>
+<tr>
+<td>F5</td>
+<td>40–44</td>
+<td>F12</td>
+<td>75–79</td>
+</tr>
+<tr>
+<td>F6</td>
+<td>45–49</td>
+<td>F13</td>
+<td>80+</td>
+</tr>
+<tr>
+<td>F7</td>
+<td>50–54</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Pico em <strong>F11 (70–74)</strong> com 0,22; a regra de triagem "faixa ≥ 9" = <strong>60+</strong>.</p>
 </div>
 </div>
 </div>
@@ -8401,23 +8007,6 @@ onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas 
 <img alt="Prevalência de diabetes por faixa etária" src="assets/img/diabetes_prev_idade.png"/>
 </div>
 </div>
-<div class="sim-box">
-<h4>Legenda — faixas etárias do BRFSS</h4>
-<p>O gráfico usa os códigos <code>Age</code> do BRFSS 2015 (faixas de 5 anos):</p>
-<table class="data-table">
-<thead><tr><th>Faixa</th><th>Idade (anos)</th><th>Faixa</th><th>Idade (anos)</th></tr></thead>
-<tbody>
-<tr><td>F1</td><td>18–24</td><td>F8</td><td>55–59</td></tr>
-<tr><td>F2</td><td>25–29</td><td>F9</td><td>60–64</td></tr>
-<tr><td>F3</td><td>30–34</td><td>F10</td><td>65–69</td></tr>
-<tr><td>F4</td><td>35–39</td><td>F11</td><td><b>70–74</b></td></tr>
-<tr><td>F5</td><td>40–44</td><td>F12</td><td>75–79</td></tr>
-<tr><td>F6</td><td>45–49</td><td>F13</td><td>80+</td></tr>
-<tr><td>F7</td><td>50–54</td><td></td><td></td></tr>
-</tbody>
-</table>
-<p><small>Pico em <b>F11 (70–74)</b> com prevalência 0,22; a regra de triagem "faixa ≥ 9" equivale a <b>60 anos ou mais</b>.</small></p>
-</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
@@ -8435,6 +8024,20 @@ onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas 
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
 <img alt="Prevalência de diabetes por atividade física" src="assets/img/diabetes_prev_atividade.png"/>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5330d99c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> a prevalência sobe com a idade até F11 (70–74 anos, 0,22) e recua em F12–F13 — ver legenda das faixas. → decisão: rastreio prioritário a partir da faixa 9 (60+).</p>
+<p><strong>Leitura:</strong> com pressão alta, 0,244 têm diabetes (n=108.829) contra 0,060 sem (n=144.851) — risco ~4×. → decisão: pressão alta é o 1º gatilho da triagem.</p>
+<p><strong>Leitura:</strong> 0,220 com colesterol alto (n=107.591) contra 0,080 sem — ~3×. → decisão: 2º gatilho da triagem.</p>
+<p><strong>Leitura:</strong> sedentários têm 0,211 contra 0,116 dos ativos — a atividade quase divide o risco pela metade. → decisão: programa de atividade para IMC ≥ 30 + sedentários.</p>
 </div>
 </div>
 </div>
@@ -8475,6 +8078,17 @@ onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas 
 </div>
 </div>
 </div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3f7350e7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> o mapa mostra a força com que cada par de fatores anda junto — quanto mais escuro, mais redundantes; a árvore já lida com isso ao escolher importâncias. → decisão: triar pelo bloco de risco, não por fator isolado.</p>
+</div>
+</div>
+</div>
+</div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=327f6172">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
@@ -8482,7 +8096,8 @@ onde o treino balanceado tem 2×(minoria no treino) linhas — contagens exatas 
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="4.-Minera%C3%A7%C3%A3o-com-KMeans-(k=3,-perfis-de-risco)">4. Mineração com KMeans (k=3, perfis de risco)<a class="anchor-link" href="#4.-Minera%C3%A7%C3%A3o-com-KMeans-(k=3,-perfis-de-risco)">¶</a></h2><p>KMeans com k=3 sobre atributos padronizados (IMC, idade, saúde geral, dias ruins,
-pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
+pressão e colesterol) para descobrir 3 perfis de risco na população.
+<strong>Como ler — KMeans:</strong> separa as 253.680 pessoas em 3 perfis por IMC/idade/saúde/pressão/colesterol sem ver o diagnóstico — se um grupo concentra diabéticos, o perfil vira critério de triagem. k=3 pedagógico (baixo/médio/alto risco).</p>
 </div>
 </div>
 </div>
@@ -8594,6 +8209,17 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 </div>
 </div>
 </div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ba7d546f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> 3 perfis — baixo risco (128.569 pessoas, 0,043 com diabetes), médio (90.305, 0,220) e alto (34.806, 0,287): o alto concentra ~7× a taxa do baixo. → decisão: encaminhar o perfil alto ao rastreio.</p>
+</div>
+</div>
+</div>
+</div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=690b3e60">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
@@ -8603,7 +8229,8 @@ pressão e colesterol) para descobrir 3 perfis de risco na população.</p>
 <h2 id="5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">5. Árvore de decisão + matriz de confusão<a class="anchor-link" href="#5.-%C3%81rvore-de-decis%C3%A3o-+-matriz-de-confus%C3%A3o">¶</a></h2><p>A árvore prevê <code>Diabetes_binary</code> com split 75/25 estratificado feito primeiro na base real;
 o undersampling balanceia <strong>só o treino</strong> e o teste mantém a prevalência real ≈ 0,14.
 A matriz de confusão e a acurácia resumem o desempenho em prevalência real
-(métrica em teste balanceado seria otimista); a importância revela o top-5 de fatores.</p>
+(métrica em teste balanceado seria otimista); a importância revela o top-5 de fatores.
+<strong>Como ler — árvore:</strong> aprende regras a partir de treino balanceado, mas é testada em gente com a prevalência real (0,139) — por isso a acurácia 0,659 vale para a operação. Importância = quanto cada fator ajudou a separar diabéticos de não diabéticos.</p>
 </div>
 </div>
 </div>
@@ -8728,6 +8355,28 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 </div>
 </div>
 </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2c4d5ca6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> acurácia 0,659 em teste com prevalência real (0,139): pega 5.720 de 8.837 diabéticos (recall ~65%) ao custo de 2.988 alarmes. → decisão: triagem com confirmação clínica depois.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4f2caecc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> top-5 — pressão alta, IMC, idade, saúde geral e renda: exame barato de consultório (pressão/IMC/idade) já separa bem. → decisão: triagem sem exame caro.</p>
+</div>
+</div>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7bc3bcbf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
@@ -8764,7 +8413,8 @@ Matriz de confusão [[VN, FP], [FN, VP]]: [[36045, 18538], [3115, 5722]]
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="6.-Regras-de-associa%C3%A7%C3%A3o-(discretiza%C3%A7%C3%A3o-+-Apriori-com-mlxtend)">6. Regras de associação (discretização + Apriori com mlxtend)<a class="anchor-link" href="#6.-Regras-de-associa%C3%A7%C3%A3o-(discretiza%C3%A7%C3%A3o-+-Apriori-com-mlxtend)">¶</a></h2><p>Fatores já binários dispensam discretização fina (variáveis contínuas como IMC/idade foram
-excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-ocorrências que viram regras.</p>
+excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-ocorrências que viram regras.
+<strong>Como ler — Apriori:</strong> acha combinações frequentes (suporte = % da base com o combo) e regras (confiança = % das vezes que se confirma; lift &gt; 1 = associação real, não acaso).</p>
 </div>
 </div>
 </div>
@@ -8894,6 +8544,17 @@ excluídas da cesta). O Apriori (suporte ≥ 0.10, lift &gt; 1.1) encontra co-oc
 </tbody>
 </table>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ef42178d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Leitura:</strong> 15 conjuntos frequentes e 22 regras; a mais forte: quem tem pressão alta tem diabetes com lift 1,75 (suporte 0,105, confiança 0,244). → decisão: pressão alta sozinha já justifica rastreio.</p>
 </div>
 </div>
 </div>

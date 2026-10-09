@@ -255,12 +255,20 @@
     o frete médio é mais alto no Norte/Nordeste (RR R$42,98) e mais baixo em SP (R$15,15) —
     sem distância de CD nos dados reais, a figura de frete traz o frete médio por UF.</p>
     <figure><img src="assets/img/olist_atraso_review.png" alt="Atraso médio por review_score"><figcaption>Atraso médio por nota (dados reais).</figcaption></figure>
+    <p><b>Leitura:</b> quem recebe antes do prazo avalia melhor — o atraso médio vai de −5,94 dias (nota 1) a −13,42 (nota 5); por pedido, a média cai de 4,29 (no prazo) para 2,72 (1–7 dias) e 1,70 (mais de 7 dias; sem entrega: 1,76). → decisão: o SLA de entrega é a alavanca nº 1 da satisfação.</p>
     <figure><img src="assets/img/olist_receita_categoria.png" alt="Receita por categoria"><figcaption>Receita por categoria (top 10, dados reais).</figcaption></figure>
+    <p><b>Leitura:</b> beleza_saude, relogios_presentes e cama_mesa_banho lideram os R$13.591.643,70 de receita bruta. → decisão: sortimento e estoque nessas categorias protegem a maior fatia da receita.</p>
     <figure><img src="assets/img/olist_receita_uf.png" alt="Receita por UF"><figcaption>Receita por UF (top 10, dados reais).</figcaption></figure>
+    <p><b>Leitura:</b> SP concentra a receita, com RJ/MG em seguida — o Sudeste domina. → decisão: CDs regionais no Sudeste.</p>
     <figure><img src="assets/img/olist_frete_distancia.png" alt="Frete médio por UF"><figcaption>Frete médio por UF (substituto honesto — sem distância de CD nos dados reais).</figcaption></figure>
+    <p><b>Leitura:</b> o frete médio explode com a distância do polo logístico: RR R$42,98 (~3× SP R$15,15). → decisão: rever tabela e subsídio de longa distância.</p>
     <figure><img src="assets/img/olist_outliers_preco_frete.png" alt="Outliers preço e frete"><figcaption>Outliers de preço/frete antes do tratamento (dados reais).</figcaption></figure>
+    <p><b>Leitura:</b> 16.640 preços e 19.137 fretes estouram o IQR e foram contidos no p99 (R$890,00 e R$84,52) só para modelar — receita, RFM e amostra usam valores brutos. → decisão: faixas extremas pedem regra de frete própria.</p>
 
     <h3>4. Mineração</h3>
+    <p><b>Como ler — KMeans:</b> agrupa clientes por recência/frequência/valor sem usar rótulos: cada cliente cai no grupo do "centro" mais parecido — o valor está no contraste entre grupos.
+    <b>Como ler — árvore:</b> aprende regras ("se atraso alto e frete/preço alto, então nota baixa") e é testada em pedidos que nunca viu (split por pedido via GroupShuffleSplit, 0 vazados).
+    <b>Como ler — co-ocorrência:</b> só conta pares de categorias que aparecem juntos no mesmo pedido, sem modelo — frequência alta sugere kit.</p>
     <p><b>Segmentação (KMeans, k=4 sobre RFM).</b> O algoritmo KMeans agrupou os 95.420 clientes
     em 4 segmentos a partir de recência, frequência e valor monetário. Perfil médio por cluster:</p>
     <table class="dataframe data-table">
@@ -305,6 +313,7 @@
   </tbody>
 </table>
     <figure><img src="assets/img/olist_clusters_rfm.png" alt="Clusters KMeans em RFM"><figcaption>Segmentos KMeans (recência × monetário).</figcaption></figure>
+    <p><b>Leitura:</b> dois gigantes de compra única (51.886 + 37.838), um recorrente (2.883, freq. 2,11, R$243) e um alto valor (2.273 × R$1.145). → decisão: fidelizar os dois pequenos com frete progressivo.</p>
     <p><b>Classificação (árvore de decisão).</b> A árvore prevê <code>review_score &gt;= 4</code>
     (77,1% da base) a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
     (atributos mais importantes: freight_ratio 0,26, delay_fill 0,25, freight_c 0,19,
@@ -332,6 +341,7 @@
   </tbody>
 </table>
     <figure><img src="assets/img/olist_matriz_confusao.png" alt="Matriz de confusão"><figcaption>Matriz de confusão da árvore (confusion_matrix via confusion_summary).</figcaption></figure>
+    <p><b>Leitura:</b> a árvore acerta 0,69 — abaixo dos ~75% do palpite bobo (sempre ≥4) — porque troca acerto global por capturar ~40% das notas baixas (3.325/8.375) ao custo de 5.050 alarmes falsos; nas altas acerta 78,6%. Importâncias: frete/preço 0,26 e atraso 0,25. → decisão: usar como triagem de risco, não como veredito.</p>
     <p><b>Associação.</b> Co-ocorrência de categorias em 727 pedidos com 2+ categorias distintas (top pares):</p>
     <table class="dataframe data-table">
   <thead>
@@ -394,6 +404,7 @@
     </tr>
   </tbody>
 </table>
+    <p><b>Leitura:</b> 727 pedidos multi-categoria; o par top é cama_mesa_banho + moveis_decoracao (70), com casa e bebês logo atrás. → decisão: kits casa com desconto.</p>
 
     <h3>5. Apoio à decisão — recomendações</h3>
     <ul>
