@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-commerce Olist — Mineração de Dados</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="ecommerce.html">E-commerce (Olist)</a></li>
+        <li><a href="saude.html">Saúde (Diabetes)</a></li>
+        <li><a href="fraude.html">Fraude (Cartão de Crédito)</a></li>
+        <li><a href="relatorio.html">Relatório</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>E-commerce brasileiro (Olist): segmentação e padrões de compra</h2>
+    <p>Fonte real: <code>kaggle datasets download olistbr/brazilian-ecommerce</code>
+    (coleção com 9 CSVs). Neste ambiente sem credencial Kaggle a análise usa dados
+    sintéticos realistas com o mesmo esquema (ver <code>notebooks/01_ecommerce.ipynb</code>).
+    Amostra de 200 linhas em <a href="assets/data/sample_olist.csv">sample_olist.csv</a>.</p>
+
+    <h3>1. Entendimento dos dados</h3>
+    <p>A coleção Olist cobre pedidos, itens, clientes, produtos, avaliações, pagamentos,
+    vendedores, geolocalização e tradução de categorias:</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>arquivo</th>
+      <th>conteudo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>olist_orders_dataset.csv</td>
+      <td>pedidos: status, timestamps de compra/aprovacao/entrega</td>
+    </tr>
+    <tr>
+      <td>olist_order_items_dataset.csv</td>
+      <td>itens: preco, frete, vendedor por pedido/produto</td>
+    </tr>
+    <tr>
+      <td>olist_customers_dataset.csv</td>
+      <td>clientes: id, cidade/UF, geolocalizacao</td>
+    </tr>
+    <tr>
+      <td>olist_products_dataset.csv</td>
+      <td>produtos: categoria, dimensoes, peso</td>
+    </tr>
+    <tr>
+      <td>olist_order_reviews_dataset.csv</td>
+      <td>avaliacoes: review_score 1-5, titulo/comentario</td>
+    </tr>
+    <tr>
+      <td>olist_order_payments_dataset.csv</td>
+      <td>pagamentos: tipo, parcelas, valor</td>
+    </tr>
+    <tr>
+      <td>olist_sellers_dataset.csv</td>
+      <td>vendedores: cidade/UF</td>
+    </tr>
+    <tr>
+      <td>olist_geolocation_dataset.csv</td>
+      <td>geolocalizacao: CEP/lat-lng por cidade</td>
+    </tr>
+    <tr>
+      <td>product_category_name_translation.csv</td>
+      <td>traducao categoria PT-BR -&gt; EN</td>
+    </tr>
+  </tbody>
+</table>
+
+    <h3>2. Preparação</h3>
+    <p>Join de <code>orders + order_items + customers</code> (6000 pedidos,
+    7337 itens). Nulos de <code>order_delivered_customer_date</code> e
+    <code>order_delivered_carrier_date</code> (~3%, pedidos cancelados/indisponíveis)
+    foram sinalizados com flag e excluídos do cálculo de atraso. Outliers de
+    preço e frete (regra IQR) foram contidos com clip no percentil 99.</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>order_id</th>
+      <th>customer_state</th>
+      <th>product_category_name</th>
+      <th>price</th>
+      <th>freight_value</th>
+      <th>delay_days</th>
+      <th>review_score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>o00000</td>
+      <td>SP</td>
+      <td>automotivo</td>
+      <td>96.69</td>
+      <td>17.07</td>
+      <td>-24.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <td>o00001</td>
+      <td>PR</td>
+      <td>beleza_saude</td>
+      <td>68.74</td>
+      <td>7.11</td>
+      <td>-22.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00002</td>
+      <td>PA</td>
+      <td>ferramentas_jardim</td>
+      <td>182.72</td>
+      <td>38.81</td>
+      <td>-11.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00003</td>
+      <td>RJ</td>
+      <td>ferramentas_jardim</td>
+      <td>355.98</td>
+      <td>15.59</td>
+      <td>-1.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <td>o00004</td>
+      <td>RJ</td>
+      <td>moveis_decoracao</td>
+      <td>144.87</td>
+      <td>7.70</td>
+      <td>-23.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00005</td>
+      <td>SP</td>
+      <td>utilidades_domesticas</td>
+      <td>173.77</td>
+      <td>18.45</td>
+      <td>-4.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00006</td>
+      <td>SP</td>
+      <td>moveis_decoracao</td>
+      <td>109.16</td>
+      <td>15.56</td>
+      <td>-5.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00007</td>
+      <td>SP</td>
+      <td>papelaria</td>
+      <td>149.93</td>
+      <td>3.00</td>
+      <td>-21.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00007</td>
+      <td>SP</td>
+      <td>relogios_presentes</td>
+      <td>100.94</td>
+      <td>8.36</td>
+      <td>-21.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>o00007</td>
+      <td>SP</td>
+      <td>perfumaria</td>
+      <td>40.36</td>
+      <td>18.08</td>
+      <td>-21.0</td>
+      <td>5.0</td>
+    </tr>
+  </tbody>
+</table>
+
+    <h3>3. EDA</h3>
+    <p>O atraso médio cresce nas notas baixas de <code>review_score</code>, confirmando
+    que pontualidade dirige a satisfação. As categorias de maior receita são cama_mesa_banho, beleza_saude, esporte_lazer;
+    SP concentra a receita por UF e o frete cresce com a distância aproximada do CD (por UF).</p>
+    <figure><img src="assets/img/olist_atraso_review.png" alt="Atraso médio por review_score"><figcaption>Atraso médio por nota.</figcaption></figure>
+    <figure><img src="assets/img/olist_receita_categoria.png" alt="Receita por categoria"><figcaption>Receita por categoria (top 10).</figcaption></figure>
+    <figure><img src="assets/img/olist_receita_uf.png" alt="Receita por UF"><figcaption>Receita por UF (top 10).</figcaption></figure>
+    <figure><img src="assets/img/olist_frete_distancia.png" alt="Frete vs distância"><figcaption>Frete vs distância aproximada.</figcaption></figure>
+    <figure><img src="assets/img/olist_outliers_preco_frete.png" alt="Outliers preço e frete"><figcaption>Outliers de preço/frete antes do tratamento.</figcaption></figure>
+
+    <h3>4. Mineração</h3>
+    <p><b>Segmentação (KMeans, k=4 sobre RFM).</b> O algoritmo KMeans agrupou os clientes
+    em 4 segmentos a partir de recência, frequência e valor monetário. Perfil médio por cluster:</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>cluster</th>
+      <th>recency</th>
+      <th>frequency</th>
+      <th>monetary</th>
+      <th>n_clientes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>420.23</td>
+      <td>1.24</td>
+      <td>194.68</td>
+      <td>1006</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>151.58</td>
+      <td>2.57</td>
+      <td>476.00</td>
+      <td>837</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>121.42</td>
+      <td>3.75</td>
+      <td>972.69</td>
+      <td>295</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>132.18</td>
+      <td>1.39</td>
+      <td>160.83</td>
+      <td>1076</td>
+    </tr>
+  </tbody>
+</table>
+    <figure><img src="assets/img/olist_clusters_rfm.png" alt="Clusters KMeans em RFM"><figcaption>Segmentos KMeans (recência × monetário).</figcaption></figure>
+    <p><b>Classificação (árvore de decisão).</b> A árvore prevê <code>review_score &gt;= 4</code>
+    a partir de atraso, frete, preço, razão frete/preço, nº de itens e flag de atraso
+    (atributos mais importantes: price, freight_value, freight_ratio). A matriz de confusão no teste (acurácia 0.80):</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pred 0</th>
+      <th>pred 1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>real 0 (&lt;=3)</th>
+      <td>42</td>
+      <td>198</td>
+    </tr>
+    <tr>
+      <th>real 1 (&gt;=4)</th>
+      <td>235</td>
+      <td>1656</td>
+    </tr>
+  </tbody>
+</table>
+    <figure><img src="assets/img/olist_matriz_confusao.png" alt="Matriz de confusão"><figcaption>Matriz de confusão da árvore (confusion_matrix via confusion_summary).</figcaption></figure>
+    <p><b>Associação.</b> Co-ocorrência de categorias em pedidos com 2+ itens (top pares):</p>
+    <table class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>cat_a</th>
+      <th>cat_b</th>
+      <th>n_pedidos</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>beleza_saude</td>
+      <td>cama_mesa_banho</td>
+      <td>42</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>relogios_presentes</td>
+      <td>37</td>
+    </tr>
+    <tr>
+      <td>beleza_saude</td>
+      <td>esporte_lazer</td>
+      <td>36</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>utilidades_domesticas</td>
+      <td>33</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>esporte_lazer</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>informatica_acessorios</td>
+      <td>31</td>
+    </tr>
+    <tr>
+      <td>cama_mesa_banho</td>
+      <td>moveis_decoracao</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <td>beleza_saude</td>
+      <td>utilidades_domesticas</td>
+      <td>28</td>
+    </tr>
+    <tr>
+      <td>esporte_lazer</td>
+      <td>utilidades_domesticas</td>
+      <td>27</td>
+    </tr>
+    <tr>
+      <td>beleza_saude</td>
+      <td>telefonia</td>
+      <td>27</td>
+    </tr>
+  </tbody>
+</table>
+
+    <h3>5. Apoio à decisão — recomendações</h3>
+    <ul>
+      <li><b>Recomenda-se reforçar o CD do Sudeste:</b> se o atraso &gt; 7 dias derruba a nota,
+      então priorizar estoque regional nas UFs de maior receita reduz o atraso e protege o review.</li>
+      <li><b>Recomenda-se fidelizar o cluster de alto valor:</b> se o KMeans isola clientes de
+      alta frequência/monetário, então oferecer frete grátis progressivo a esse segmento
+      aumenta a recompra.</li>
+      <li><b>Recomenda-se rever a tabela de frete de longa distância:</b> se frete/preço alto
+      prediz nota baixa na árvore, então subsidiar o frete acima de 1500 km preserva a satisfação.</li>
+      <li><b>Recomenda-se bundle das categorias co-ocorrentes:</b> se pares de categorias
+      aparecem juntos com frequência, então criar kits com desconto eleva o ticket médio.</li>
+    </ul>
+  </main>
+  <footer>
+    <p>Disciplina SAD — Mineração de Dados. Dados brutos (Kaggle) não versionados; ver README.</p>
+  </footer>
+</body>
+</html>
