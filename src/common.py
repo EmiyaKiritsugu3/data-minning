@@ -19,11 +19,15 @@ def load_csv(path: str) -> DataFrame:
 
 
 def save_fig(fig, name: str) -> str:
-    """Salva a figura em docs/assets/img/<name> e retorna o caminho como str."""
+    """Salva a figura em docs/assets/img/<name> e retorna o caminho web relativo a docs/.
+
+    O retorno e a URL relativa "assets/img/<name>", pronta para embutir em
+    <img src> nas paginas de docs/ (nenhum chamador depende do caminho absoluto).
+    """
     IMG_DIR.mkdir(parents=True, exist_ok=True)
     dest = IMG_DIR / name
     fig.savefig(dest, bbox_inches="tight")
-    return str(dest)
+    return f"assets/img/{name}"
 
 
 def df_to_html_table(df: DataFrame, max_rows: int = 20) -> str:

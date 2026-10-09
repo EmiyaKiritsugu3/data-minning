@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Fraude em cartao de credito — SAD</title>
+<title>Fraude em Cartão de Crédito — Mineração de Dados</title>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7295,14 +7295,14 @@ a.anchor-link {
 </head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
   <header>
-    <h1>Sistemas de Apoio a Decisao — Mineracao de Dados</h1>
+    <h1>Sistemas de Apoio à Decisão — Mineração de Dados</h1>
     <nav>
       <ul>
-        <li><a href="index.html">Inicio</a></li>
+        <li><a href="index.html">Início</a></li>
         <li><a href="ecommerce.html">E-commerce (Olist)</a></li>
-        <li><a href="saude.html">Saude (Diabetes)</a></li>
-        <li><a href="fraude.html">Fraude (Cartao de Credito)</a></li>
-        <li><a href="relatorio.html">Relatorio</a></li>
+        <li><a href="saude.html">Saúde (Diabetes)</a></li>
+        <li><a href="fraude.html">Fraude (Cartão de Crédito)</a></li>
+        <li><a href="relatorio.html">Relatório</a></li>
       </ul>
     </nav>
   </header>
@@ -8522,12 +8522,12 @@ custa 50x mais que uma revisao manual (FP=10).</p>
 O valor exato do limiar esta impresso na secao 4 (variavel <code>T_REC</code>).</p>
 <p><strong>Recomendacoes:</strong></p>
 <ol>
-<li>Recomenda-se operar no limiar de custo minimo (alto recall): cada fraude evitada paga
-dezenas de revisoes manuais, dado o custo FN &gt;&gt; FP.</li>
-<li>Recomenda-se step-up adaptativo de madrugada/horarios de alta taxa de fraude (secao 1):
-mesmo escore medio a noite deve exigir autenticacao reforcada.</li>
-<li>Recomenda-se fila de revisao priorizada por escore nos micro-clusters de risco do KMeans,
-em vez de revisao aleatoria.</li>
+<li>SE cada fraude evitada paga dezenas de revisoes manuais (custo FN &gt;&gt; FP)
+ENTÃO recomenda-se operar no limiar de custo minimo (alto recall).</li>
+<li>SE a taxa de fraude e maior de madrugada/horarios de pico (secao 1)
+ENTÃO recomenda-se step-up adaptativo: mesmo escore medio a noite deve exigir autenticacao reforcada.</li>
+<li>SE os micro-clusters de risco do KMeans concentram a fraude
+ENTÃO recomenda-se fila de revisao priorizada por escore, em vez de revisao aleatoria.</li>
 <li>Recomenda-se recalibrar o limiar mensalmente: a distribuicao de fraude muda e o ponto
 de custo minimo se desloca; monitorar precision/recall em producao.</li>
 </ol>

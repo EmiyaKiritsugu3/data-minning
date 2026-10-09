@@ -16,4 +16,5 @@ def test_common_signatures():
 
 
 def test_data_gitignored():
-    assert Path(".gitignore").read_text().split().__contains__("data/")
+    lines = {ln.strip() for ln in Path(".gitignore").read_text().splitlines()}
+    assert lines & {"data/", "/data/"}, ".gitignore deve ignorar a pasta data/ da raiz"
