@@ -16,8 +16,8 @@ order_id,customer_state,product_category_name,price,freight_value,delay_days,rev
 1d640f23dd5922c443a96b7caf168229,SP,utilidades_domesticas,59.9,14.13,-9.0,4.0,0
 20662ff76e857a011a9f64039d541dab,PR,telefonia,19.95,15.1,-8.0,2.0,0
 223be4c8588a9c2a4957d1f36b1dd632,SP,construcao_ferramentas_construcao,109.0,8.51,-8.0,5.0,0
-2537dc25ebd836a44792c49ab1914c7d,MG,cool_stuff,890.0,22.54,-23.0,,0
-274f33c3b4d5612a37e3a223a2d9bc5a,PR,construcao_ferramentas_iluminacao,326.0,84.52,-13.0,5.0,0
+2537dc25ebd836a44792c49ab1914c7d,MG,cool_stuff,899.0,22.54,-23.0,,0
+274f33c3b4d5612a37e3a223a2d9bc5a,PR,construcao_ferramentas_iluminacao,326.0,85.69,-13.0,5.0,0
 2833a586d04517b0c18e17c24ae684c3,BA,telefonia,259.99,22.09,-19.0,4.0,0
 293e34b72465ae7478f59d4d0b3e58ba,PR,eletronicos,18.9,13.47,-8.0,4.0,0
 2a02dbd2e676fcfb7ee4d2bffdc4b378,MG,perfumaria,79.99,15.38,-15.0,5.0,0
@@ -62,8 +62,8 @@ order_id,customer_state,product_category_name,price,freight_value,delay_days,rev
 54fb6d834ad868ddda6fd4562d4be5a2,SP,beleza_saude,99.99,13.36,-23.0,4.0,0
 5528a3c9850e07ac5eeea39f275d6c5e,RJ,cama_mesa_banho,77.0,15.69,-6.0,5.0,0
 583d26399c28234b68343e4ec352842a,SP,esporte_lazer,40.5,19.32,-38.0,5.0,0
-58c5215132c75e7d8226faaf2fab73a2,RJ,automotivo,890.0,24.8,-11.0,5.0,0
-5bd06bab48e0423fc35d1c236d48a6bb,PE,beleza_saude,760.0,84.52,-15.0,5.0,0
+58c5215132c75e7d8226faaf2fab73a2,RJ,automotivo,1389.9,24.8,-11.0,5.0,0
+5bd06bab48e0423fc35d1c236d48a6bb,PE,beleza_saude,760.0,248.54,-15.0,5.0,0
 5ce6115708c300fbcc79f7886d0163ec,SP,automotivo,49.9,16.54,-11.0,4.0,0
 5d8d5f0c825880c16968246b192e6899,MG,informatica_acessorios,38.9,12.48,-17.0,4.0,0
 5dc269b7c4dce1624653e914a1b739f5,SP,market_place,77.08,11.15,-28.0,3.0,0
@@ -91,7 +91,7 @@ order_id,customer_state,product_category_name,price,freight_value,delay_days,rev
 78d1ad5b65aecc8f61c0fab7b28e8281,SP,moveis_quarto,99.9,27.25,-13.0,4.0,0
 7a7375f58149053d599aae579288fd96,SP,utilidades_domesticas,379.9,68.61,7.0,1.0,1
 7aaf9c17ae408e7a639faf0623c5cc73,SP,telefonia,12.99,7.39,-8.0,2.0,0
-7abe0cad12e4aec0091551e7153275d3,MS,utilidades_domesticas,128.0,84.52,2.0,4.0,1
+7abe0cad12e4aec0091551e7153275d3,MS,utilidades_domesticas,128.0,89.57,2.0,4.0,1
 7caa2aaed7e9a56d1bc1004eb7d296e5,SP,bebes,144.97,9.18,-5.0,5.0,0
 7cd0da49ecd223041fb8f6f8de488314,MG,bebes,50.0,17.6,-18.0,4.0,0
 80b9515e62b3dcb4da3c324967e6af86,SP,utilidades_domesticas,29.9,9.34,-8.0,5.0,0
@@ -121,7 +121,7 @@ a57913442118de617c1687f936b0a986,SP,cool_stuff,214.99,17.13,-10.0,5.0,0
 a589a29e4907819c966a0c4840b41ccc,SP,ferramentas_jardim,89.0,36.7,-17.0,5.0,0
 a6264125a9c50827b115847d47c73a13,MG,ferramentas_jardim,59.9,17.67,-14.0,5.0,0
 a63a3d3aceb23878150f9186b9bed935,RJ,cama_mesa_banho,89.0,29.18,-17.0,5.0,0
-a8a52afd408a3023bafcd9ed3c0d2e15,SP,pcs,890.0,38.51,-11.0,5.0,0
+a8a52afd408a3023bafcd9ed3c0d2e15,SP,pcs,1300.0,38.51,-11.0,5.0,0
 a92c76269cd2be64008c82c84d6e5d48,RJ,moveis_decoracao,89.9,16.39,-14.0,5.0,0
 aa240e84341dc3a58a69fdaa1c0b927c,SP,relogios_presentes,78.0,7.81,-3.0,5.0,0
 aa3a8549b44bdf1c12309c0f439f9964,RJ,beleza_saude,19.9,15.1,-15.0,5.0,0
@@ -148,7 +148,7 @@ c0c9eba73d421ff348cf87bd24ca5609,SP,informatica_acessorios,70.0,15.37,-1.0,5.0,0
 c157dbddbf8cf9a086acf9ef8eb8cf92,MG,eletronicos,19.9,16.79,-16.0,5.0,0
 c27c10569c789ec6293df7ef9f4caaa1,MG,moveis_escritorio,89.96,26.13,-21.0,4.0,0
 c28c74ee5fb4a731178895058c0de619,MT,beleza_saude,119.9,37.53,-5.0,4.0,0
-c50ed2bf9927ae7e870560f6fb8894ed,SC,brinquedos,689.9,84.52,-5.0,1.0,0
+c50ed2bf9927ae7e870560f6fb8894ed,SC,brinquedos,689.9,155.11,-5.0,1.0,0
 c566fd2719c6f9e102a841c474cb490c,RJ,cama_mesa_banho,74.8,15.69,-15.0,5.0,0
 c8c0e74f5426e74b812efe05eaab11a6,PR,beleza_saude,199.89,16.28,-23.0,5.0,0
 c94206a6d6698d5852b7e9e14bdc2e79,SP,beleza_saude,29.89,7.47,-6.0,5.0,0
@@ -198,4 +198,4 @@ f8c23d339c140eddae8418d518af8497,SP,ferramentas_jardim,53.9,13.4,-6.0,5.0,0
 fa3bee504523342f3e1b29cfc38a91d3,SP,fashion_bolsas_e_acessorios,74.99,11.55,-9.0,5.0,0
 fba0d18dccd0e4e88943d84a0f5aa448,SP,relogios_presentes,55.0,7.39,-16.0,4.0,0
 fcf3f4101d34a36c71f1f83b811e88c1,RJ,livros_interesse_geral,10.9,15.1,5.0,5.0,1
-ff85c3e4329457e83cb474799a257ccc,SP,cool_stuff,890.0,17.5,-11.0,5.0,0
+ff85c3e4329457e83cb474799a257ccc,SP,cool_stuff,899.0,17.5,-11.0,5.0,0
