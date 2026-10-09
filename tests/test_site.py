@@ -24,10 +24,19 @@ def test_pages_resolve_under_docs():
     for p in Path("docs").glob("*.html"):
         html = p.read_text(encoding="utf-8")
         assert "../" not in re.findall(r'(?:src|href)="([^"]+)"', html) and '"../' not in html, p
+        assert "'../" not in html, p
         for m in re.finditer(r'(?:src|href)="([^"]+)"', html):
             u = m.group(1)
             if u.startswith(("http", "#", "mailto:")):
                 continue
+            assert (p.parent / u).exists(), f"{p}: {u}"
+        for m in re.finditer(r'''(?:src|href)=["']([^"']+)''', html):
+            assert '"../' not in m.group(0) and "'../" not in m.group(0), p
+            u = m.group(1)
+            if u.startswith(("http", "#", "mailto:")):
+                continue
+            if any(c in u for c in "<>{} \t\n\r"):
+                continue  # nbconvert <pre> code listing, not a real attr
             assert (p.parent / u).exists(), f"{p}: {u}"
 
 
